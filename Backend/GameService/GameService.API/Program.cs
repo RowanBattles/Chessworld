@@ -1,6 +1,12 @@
+using GameService.API.src.Business.Services;
+using GameService.API.src.Data.Repositories;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IGameService, GameService.API.src.Business.Services.GameService>();
+builder.Services.AddSingleton<IGameRepository, InGameMemoryRepository>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

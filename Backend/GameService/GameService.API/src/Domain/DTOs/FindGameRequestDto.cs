@@ -1,6 +1,7 @@
-﻿namespace GameService.src.Domain.DTOs
+﻿namespace GameService.API.src.Domain.DTOs
 {
-    public class FindGameRequest
+    public class FindGameRequestDto
     {
+        public string PlayerId { get; private set; } = string.Empty;
     }
 }
