@@ -2,24 +2,25 @@
 using GameService.API.src.Business.Services;
 using GameService.API.src.Domain.DTOs;
 
-namespace GameService.API.src.API.Hubs
+namespace GameService.API.API.Hubs
 {
     public class GameHub(IGameService gameService) : Hub
     {
         private readonly IGameService _gameService = gameService;
 
-        public async Task onConnect()
+        public override Task OnConnectedAsync()
         {
-            await Clients.Caller.SendAsync("Connected", Context.ConnectionId);
+            string connectionId = Context.ConnectionId;
+            return base.OnConnectedAsync();
         }
 
         public async Task FindGame(FindGameRequestDto request)
         {
             var response = _gameService.MatchPlayer(request.PlayerId);
-            if (response.OpponentId != null)
+            if (!response.IsWaiting)
             {
-                await Clients.Client(request.PlayerId).SendAsync("GameFound", response);
-                await Clients.Client(response.OpponentId).SendAsync("GameFound", response);
+                await Clients.Client(request.PlayerId.ToString()).SendAsync("GameFound", response);
+                await Clients.Client(response.OpponentId?.ToString() ?? string.Empty).SendAsync("GameFound", response);
             }
             else
             {
@@ -32,7 +33,7 @@ namespace GameService.API.src.API.Hubs
             var opponentId = _gameService.RemovePlayer(request.PlayerId);
             if (opponentId != null)
             {
-                await Clients.Client(opponentId).SendAsync("OpponentLeft");
+                await Clients.Client(opponentId.ToString() ?? string.Empty).SendAsync("OpponentLeft");
             }
         }
     }

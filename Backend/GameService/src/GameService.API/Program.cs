@@ -1,3 +1,4 @@
+using GameService.API.API.Hubs;
 using GameService.API.src.Business.Services;
 using GameService.API.src.Data.Repositories;
 
@@ -5,7 +6,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddSignalR();
-builder.Services.AddSingleton<IGameService, GameService.API.src.Business.Services.GameService>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", builder =>
+    {
+        builder.AllowAnyMethod()
+               .AllowAnyHeader()
+               .SetIsOriginAllowed(origin => true)
+               .AllowCredentials();
+    });
+});
+builder.Services.AddSingleton<IGameService, GameService.API.Business.Services.GameService>();
 builder.Services.AddSingleton<IGameRepository, InGameMemoryRepository>();
 
 builder.Services.AddControllers();
@@ -24,8 +35,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors("CorsPolicy");
+
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<GameHub>("/gamehub");
 
 app.Run();
