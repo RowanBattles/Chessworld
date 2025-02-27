@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Data\" />
+    <Folder Include="Domain\" />
   </ItemGroup>
 
   <ItemGroup>

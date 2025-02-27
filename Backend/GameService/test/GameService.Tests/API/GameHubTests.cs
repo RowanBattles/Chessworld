@@ -43,7 +43,6 @@ namespace GameService.Tests.API
             var result = await _connection.InvokeAsync<FindGameResponseDto>("MatchPlayer", playerId);
 
             // Assert
-            Assert.True(result.IsWaiting);
             Assert.Equal(playerId, result.OpponentId);
 
             // Cleanup
@@ -63,7 +62,6 @@ namespace GameService.Tests.API
             var result2 = await _connection.InvokeAsync<FindGameResponseDto>("MatchPlayer", playerId2);
 
             // Assert
-            Assert.False(result2.IsWaiting);
             Assert.Equal(playerId1, result2.OpponentId);
 
             // Cleanup

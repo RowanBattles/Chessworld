@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GameService.Tests.Domain
+namespace GameService.Tests.Data
 {
     public class InGameMemoryRepositoryTests
     {

@@ -8,23 +8,36 @@ namespace GameService.API.Business.Services
     {
         private readonly IGameRepository _gameRepository = gameRepository;
 
-        public FindGameResponseDto MatchPlayer(Guid playerId)
+        public Guid? DisconnectPlayer(Guid? playerId)
         {
-            if (_gameRepository.TryDequeueOpponent(out Guid opponentId))
+            if (playerId != null)
+            {
+                return RemovePlayer((Guid)playerId);
+            }
+            return null;
+        }
+
+        public FindGameResponseDto? MatchPlayer(Guid playerId)
+        {
+            if (_gameRepository.PlayerInQueue(playerId) || _gameRepository.PlayerInGame(playerId))
+            {
+                return new FindGameResponseDto(playerId);
+            }
+            else if (_gameRepository.TryDequeueOpponent(out Guid opponentId))
             {
                 _gameRepository.AddToActiveGames(playerId, opponentId);
-                return new FindGameResponseDto(opponentId, false);
+                return new FindGameResponseDto(opponentId);
             }
             else
             {
                 _gameRepository.EnqueuePlayer(playerId);
-                return new FindGameResponseDto(playerId, true);
+                return null;
             }
         }
 
         public Guid? RemovePlayer(Guid playerId)
         {
-            if (_gameRepository.PlayerInGame(playerId))
+            if (_gameRepository.PlayerInGame(playerId) || _gameRepository.PlayerInQueue(playerId))
             {
                 Guid? opponentId = _gameRepository.GetOpponent(playerId);
                 if (opponentId != null)
@@ -34,7 +47,7 @@ namespace GameService.API.Business.Services
                 }
                 else
                 {
-                    //TODO: throw exception and log error
+                    // TODO: Exception handling
                     return null;
                 }
             }

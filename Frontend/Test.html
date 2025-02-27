@@ -6,38 +6,41 @@
 </head>
 <body>
     <h1>SignalR Test</h1>
-    
-    <!-- 🔹 Display Player ID at the top -->
-    <div id="playerIdDisplay" style="font-size: 18px; margin-bottom: 10px;">
-        Player ID: <span id="playerIdText">Not connected</span>
-    </div>
 
     <button id="connectButton">Connect</button>
     <button id="findGameButton">Find Game</button>
     <button id="leaveGameButton">Leave Game</button>
     <div id="messages"></div>
+    <!-- Add an element to display the playerId -->
+    <div id="playerIdDisplay"></div>
 
     <script>
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("http://localhost:5000/gamehub")
             .build();
 
-        let playerId = generateGuid();
+        let playerId = null; // Declare playerId globally
 
-        connection.start().then(() => {
-            console.log("SignalR connection established");
-        }).catch(err => {
-            console.error("Error while starting connection: ", err);
+        // Listen for the "ReceivePlayerId" event from the server
+        connection.on("ReceivePlayerId", (receivedPlayerId) => {
+            // Store the received playerId in the global variable
+            playerId = receivedPlayerId;
+
+            // Log the received playerId to the console
+            console.log("Player ID received from server:", playerId);
+
+            // Update the UI with the playerId
+            document.getElementById("playerIdDisplay").innerText = `Player ID: ${playerId}`;
         });
-
-        // Display the generated Player ID immediately
-        document.getElementById("playerIdText").innerText = playerId;
 
         document.getElementById("connectButton").addEventListener("click", async () => {
             try {
                 await connection.start();
-                // 🔹 Update the Player ID display after connecting
+                // 🔹 Update the UI after connecting
                 document.getElementById("messages").innerText = `Connected to the hub`;
+
+                // Log connection details
+                console.log("Connection established, connectionId:", connection.connectionId);
             } catch (err) {
                 console.error(err);
                 document.getElementById("messages").innerText = "Failed to connect to the hub.";
@@ -45,7 +48,13 @@
         });
 
         document.getElementById("findGameButton").addEventListener("click", async () => {
+            if (playerId === null) {
+                document.getElementById("messages").innerText = "Player ID is not set. Please connect first.";
+                return;
+            }
+
             try {
+                // Invoke the FindGame method and pass the playerId
                 await connection.invoke("FindGame", { PlayerId: playerId });
             } catch (err) {
                 console.error(err);
@@ -54,29 +63,33 @@
         });
 
         document.getElementById("leaveGameButton").addEventListener("click", async () => {
+            if (playerId === null) {
+                document.getElementById("messages").innerText = "Player ID is not set. Please connect first.";
+                return;
+            }
+
             try {
+                // Invoke the LeaveGame method and pass the playerId
                 await connection.invoke("LeaveGame", { PlayerId: playerId });
             } catch (err) {
                 console.error(err);
                 document.getElementById("messages").innerText = "Failed to invoke LeaveGame.";
-            }
+            }   
         });
 
         connection.on("GameFound", (response) => {
-            console.log(response);  // Check if this prints the correct data
-            document.getElementById("messages").innerText = `Game found! Connected to player ${response.OpponentId}`;
+            console.log(response);
+            document.getElementById("messages").innerText = `Game found! Connected to player ${response}`;
         });
 
         connection.on("WaitingForOpponent", () => {
             document.getElementById("messages").innerText = "Waiting for an opponent...";
         });
 
-        function generateGuid() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
+        connection.on("GameLeft", (response) => {
+            console.log(response);
+            document.getElementById("messages").innerText = `${response}`;
+        });
     </script>
 </body>
 </html>

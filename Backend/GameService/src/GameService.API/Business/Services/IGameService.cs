@@ -4,7 +4,8 @@ namespace GameService.API.src.Business.Services
 {
     public interface IGameService
     {
-        FindGameResponseDto MatchPlayer(Guid playerId);
+        Guid? DisconnectPlayer(Guid? playerId);
+        FindGameResponseDto? MatchPlayer(Guid playerId);
         Guid? RemovePlayer(Guid playerId);
     }
 }
