@@ -1,4 +1,5 @@
-﻿using GameService.API.src.Data.Repositories;
+﻿using GameService.API.Domain.DTOs;
+using GameService.API.src.Data.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,62 +18,65 @@ namespace GameService.Tests.Data
         }
 
         [Fact]
-        public void TryDequeueOpponent_ShouldReturnFalse_WhenQueueIsEmpty()
+        public void MatchWithFirstPersonInQueue_ShouldReturnNull_WhenQueueIsEmpty()
         {
             // Act
-            var result = _repository.TryDequeueOpponent(out Guid opponentId);
+            var result = _repository.MatchWithFirstPersonInQueue();
 
             // Assert
-            Assert.False(result);
-            Assert.Equal(Guid.Empty, opponentId);
+            Assert.Null(result);
         }
 
         [Fact]
-        public void TryDequeueOpponent_ShouldReturnTrue_WhenQueueIsNotEmpty()
+        public void MatchWithFirstPersonInQueue_ShouldReturnPlayerId_WhenQueueIsNotEmpty()
         {
             // Arrange
             var playerId = Guid.NewGuid();
             _repository.EnqueuePlayer(playerId);
 
             // Act
-            var result = _repository.TryDequeueOpponent(out Guid opponentId);
+            var result = _repository.MatchWithFirstPersonInQueue();
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(playerId, result);
+        }
+
+        [Fact]
+        public void AddGame_ShouldAddGameToActiveGames()
+        {
+            // Arrange
+            var player1Id = Guid.NewGuid();
+            var player2Id = Guid.NewGuid();
+            var game = new Game(player1Id, player2Id);
+
+            // Act
+            _repository.AddGame(game);
+
+            // Assert
+            Assert.True(_repository.PlayerInGame(player1Id));
+            Assert.True(_repository.PlayerInGame(player2Id));
+            var retrievedGame = _repository.GetGameByPlayerId(player1Id);
+            Assert.NotNull(retrievedGame);
+            Assert.Equal(game.GameId, retrievedGame.GameId);
+        }
+
+        [Fact]
+        public void RemoveGame_ShouldRemoveGameFromActiveGames()
+        {
+            // Arrange
+            var player1Id = Guid.NewGuid();
+            var player2Id = Guid.NewGuid();
+            var game = new Game(player1Id, player2Id);
+            _repository.AddGame(game);
+
+            // Act
+            var result = _repository.RemoveGame(game.GameId);
 
             // Assert
             Assert.True(result);
-            Assert.Equal(playerId, opponentId);
-        }
-
-        [Fact]
-        public void AddToActiveGames_ShouldAddPlayersToActiveGames()
-        {
-            // Arrange
-            var playerId = Guid.NewGuid();
-            var opponentId = Guid.NewGuid();
-
-            // Act
-            _repository.AddToActiveGames(playerId, opponentId);
-
-            // Assert
-            Assert.True(_repository.PlayerInGame(playerId));
-            Assert.True(_repository.PlayerInGame(opponentId));
-            Assert.Equal(opponentId, _repository.GetOpponent(playerId));
-            Assert.Equal(playerId, _repository.GetOpponent(opponentId));
-        }
-
-        [Fact]
-        public void RemoveFromGame_ShouldRemovePlayersFromActiveGames()
-        {
-            // Arrange
-            var playerId = Guid.NewGuid();
-            var opponentId = Guid.NewGuid();
-            _repository.AddToActiveGames(playerId, opponentId);
-
-            // Act
-            _repository.RemoveFromGame(playerId, opponentId);
-
-            // Assert
-            Assert.False(_repository.PlayerInGame(playerId));
-            Assert.False(_repository.PlayerInGame(opponentId));
+            Assert.False(_repository.PlayerInGame(player1Id));
+            Assert.False(_repository.PlayerInGame(player2Id));
         }
 
         [Fact]
@@ -83,11 +87,11 @@ namespace GameService.Tests.Data
             _repository.EnqueuePlayer(playerId);
 
             // Act
-            _repository.RemoveFromWaitingQueue(playerId);
+            _repository.DequeuePlayer(playerId);
 
             // Assert
-            var result = _repository.TryDequeueOpponent(out Guid opponentId);
-            Assert.False(result);
+            var result = _repository.MatchWithFirstPersonInQueue();
+            Assert.Null(result);
         }
     }
 }

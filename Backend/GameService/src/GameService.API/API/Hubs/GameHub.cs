@@ -11,36 +11,31 @@ namespace GameService.API.API.Hubs
         private readonly IGameService _gameService;
         private readonly IPlayerService _playerService;
 
-        public GameHub(IGameService gameService, IPlayerService playerService, IUserIdProvider userIdProvider)
+        public GameHub(IGameService gameService, IPlayerService playerService)
         {
             _gameService = gameService;
             _playerService = playerService;
         }
 
-
         public override async Task OnConnectedAsync()
         {
             string connectionId = Context.ConnectionId;
 
-            var playerId = _playerService.AddConnectionIdToPlayer(connectionId);
+            var callerId = _playerService.AddConnectionId(connectionId);
 
-            await Clients.Caller.SendAsync("ReceivePlayerId", playerId);
+            await Clients.Caller.SendAsync("ReceivePlayerId", callerId);
             await base.OnConnectedAsync();
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             string connectionIdPlayer = Context.ConnectionId;
-            var playerId = _playerService.GetPlayerId(connectionIdPlayer);
-            var opponentId = _gameService.DisconnectPlayer(playerId);
 
-            if (opponentId != null)
+            var callerId = _playerService.RemoveConnectionId(connectionIdPlayer);
+
+            if (callerId != null)
             {
-                var connectionIdOpponent = _playerService.GetConnectionId((Guid)opponentId);
-                if (!string.IsNullOrEmpty(connectionIdOpponent))
-                {
-                    await Clients.Client(connectionIdOpponent).SendAsync("GameLeft", "Game ended");
-                }
+                await HandlePlayerDisconnection((Guid)callerId);
             }
 
             await base.OnDisconnectedAsync(exception);
@@ -73,19 +68,46 @@ namespace GameService.API.API.Hubs
 
         public async Task LeaveGame(FindGameRequestDto request)
         {
-            var opponentId = _gameService.RemovePlayer(request.PlayerId);
-            if (opponentId != null)
+            var playerId = _gameService.RemovePlayer(request.PlayerId);
+            
+            if (playerId != null)
             {
-                var connectionId = _playerService.GetConnectionId((Guid)opponentId);
-                if (!string.IsNullOrEmpty(connectionId))
+                if (playerId == request.PlayerId)
                 {
-                    await Clients.Caller.SendAsync("GameLeft", "Game ended");
-                    await Clients.Client(connectionId).SendAsync("GameLeft", "Game ended");
+                    await Clients.Caller.SendAsync("GameLeft", "Queue left");
+                }
+                else 
+                {
+                    var connectionId = _playerService.GetConnectionId((Guid)playerId);
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        await Clients.Caller.SendAsync("GameLeft", "You have left the game");
+                        await Clients.Client(connectionId).SendAsync("GameLeft", "Opponent has left the game");
+                    }
+                    else
+                    {
+                        // Log exception error
+                        await Clients.Caller.SendAsync("GameLeft", "Opponent not found");
+                    }
                 }
             }
             else
             {
-                await Clients.Caller.SendAsync("GameLeft", "Queue left");
+                await Clients.Caller.SendAsync("GameLeft", "Not in game");
+            }
+        }
+
+        private async Task HandlePlayerDisconnection(Guid callerId)
+        {
+            var playerId = _gameService.RemovePlayer(callerId);
+
+            if ((playerId != null) && (playerId != callerId))
+            {
+                var connectionId = _playerService.GetConnectionId((Guid)playerId);
+                if (!string.IsNullOrEmpty(connectionId))
+                {
+                    await Clients.Client(connectionId).SendAsync("GameLeft", "Your opponent has disconnected");
+                }
             }
         }
     }

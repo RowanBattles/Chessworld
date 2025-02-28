@@ -1,4 +1,5 @@
-﻿using GameService.API.src.Business.Services;
+﻿using GameService.API.Domain.DTOs;
+using GameService.API.src.Business.Services;
 using GameService.API.src.Data.Repositories;
 using GameService.API.src.Domain.DTOs;
 
@@ -8,54 +9,64 @@ namespace GameService.API.Business.Services
     {
         private readonly IGameRepository _gameRepository = gameRepository;
 
-        public Guid? DisconnectPlayer(Guid? playerId)
+        private bool PlayerInQueue(Guid playerId)
         {
-            if (playerId != null)
-            {
-                return RemovePlayer((Guid)playerId);
-            }
-            return null;
+            return _gameRepository.PlayerInQueue(playerId);
+        }
+
+        private bool PlayerInGame(Guid playerId)
+        {
+            return _gameRepository.PlayerInGame(playerId);
         }
 
         public FindGameResponseDto? MatchPlayer(Guid playerId)
         {
-            if (_gameRepository.PlayerInQueue(playerId) || _gameRepository.PlayerInGame(playerId))
+            bool playerInQueue = PlayerInQueue(playerId);
+            bool playerInGame = PlayerInGame(playerId);
+
+            if (!playerInQueue && !playerInGame)
             {
-                return new FindGameResponseDto(playerId);
+                var opponentId = _gameRepository.MatchWithFirstPersonInQueue();
+                if (opponentId != null)
+                {
+                    // Create new game
+                    Game game = new(playerId, (Guid)opponentId);
+                    _gameRepository.AddGame(game);
+                    return new FindGameResponseDto((Guid)opponentId);
+                }
+                else
+                {
+                    // Queue player
+                    _gameRepository.EnqueuePlayer(playerId);
+                    return null;
+                }
             }
-            else if (_gameRepository.TryDequeueOpponent(out Guid opponentId))
-            {
-                _gameRepository.AddToActiveGames(playerId, opponentId);
-                return new FindGameResponseDto(opponentId);
-            }
-            else
-            {
-                _gameRepository.EnqueuePlayer(playerId);
-                return null;
-            }
+            return null;
         }
 
         public Guid? RemovePlayer(Guid playerId)
         {
-            if (_gameRepository.PlayerInGame(playerId) || _gameRepository.PlayerInQueue(playerId))
+            bool playerInQueue = PlayerInQueue(playerId);
+            bool playerInGame = PlayerInGame(playerId);
+
+            if (playerInQueue)
             {
-                Guid? opponentId = _gameRepository.GetOpponent(playerId);
-                if (opponentId != null)
+                // Remove player from queue
+                _gameRepository.DequeuePlayer(playerId);
+                return playerId;
+            }
+            if (playerInGame)
+            {
+                // Remove game
+                Game? game = _gameRepository.GetGameByPlayerId(playerId);
+                if (game != null)
                 {
-                    _gameRepository.RemoveFromGame(playerId, opponentId.Value);
+                    _gameRepository.RemoveGame(game.GameId);
+                    var opponentId = game.Player1Id == playerId ? game.Player2Id : game.Player1Id;
                     return opponentId;
                 }
-                else
-                {
-                    // TODO: Exception handling
-                    return null;
-                }
             }
-            else
-            {
-                _gameRepository.RemoveFromWaitingQueue(playerId);
-                return null;
-            }
+            return null;
         }
     }
 }

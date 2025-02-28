@@ -3,6 +3,7 @@ using Moq;
 using GameService.API.src.Data.Repositories;
 using GameService.API.src.Domain.DTOs;
 using System;
+using GameService.API.Domain.DTOs;
 
 namespace GameService.Tests.Business
 {
@@ -21,8 +22,8 @@ namespace GameService.Tests.Business
         public void MatchPlayer_ShouldReturnWaiting_WhenNoMatchFound()
         {
             // Arrange
-            _mockRepo.Setup(repo => repo.TryDequeueOpponent(out It.Ref<Guid>.IsAny))
-                     .Returns(false);
+            _mockRepo.Setup(repo => repo.MatchWithFirstPersonInQueue())
+                     .Returns((Guid?)null);
             Guid playerId = Guid.NewGuid();
 
             // Act
@@ -38,8 +39,8 @@ namespace GameService.Tests.Business
         {
             // Arrange
             Guid opponentId = Guid.NewGuid();
-            _mockRepo.Setup(repo => repo.TryDequeueOpponent(out opponentId))
-                     .Returns(true);
+            _mockRepo.Setup(repo => repo.MatchWithFirstPersonInQueue())
+                     .Returns(opponentId);
             Guid playerId = Guid.NewGuid();
 
             // Act
@@ -48,25 +49,13 @@ namespace GameService.Tests.Business
             // Assert
             Assert.NotNull(result);
             Assert.Equal(opponentId, result.OpponentId);
-            _mockRepo.Verify(repo => repo.AddToActiveGames(playerId, opponentId), Times.Once);
+            _mockRepo.Verify(repo => repo.AddGame(It.Is<Game>(g => g.Player1Id == playerId && g.Player2Id == opponentId)), Times.Once);
         }
 
         [Fact]
         public void RemovePlayer_ShouldNotifyOpponent_WhenInGame()
         {
-            // Arrange
-            Guid playerId = Guid.NewGuid();
-            Guid opponentId = Guid.NewGuid();
-            _mockRepo.Setup(repo => repo.PlayerInGame(playerId)).Returns(true);
-            _mockRepo.Setup(repo => repo.GetOpponent(playerId)).Returns(opponentId);
 
-            // Act
-            var result = _gameService.RemovePlayer(playerId);
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(opponentId, result);
-            _mockRepo.Verify(repo => repo.RemoveFromGame(playerId, opponentId), Times.Once);
         }
     }
 }

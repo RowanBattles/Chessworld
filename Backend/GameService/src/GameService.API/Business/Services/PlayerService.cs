@@ -4,27 +4,33 @@ namespace GameService.API.Business.Services
 {
     public class PlayerService : IPlayerService
     {
-        private readonly IPlayerMemoryRepository _playerMemoryRepository;
+        private readonly IPlayerRepository _playerMemoryRepository;
 
-        public PlayerService(IPlayerMemoryRepository repository)
+        public PlayerService(IPlayerRepository repository)
         {
             _playerMemoryRepository = repository;
         }
 
-        public Guid AddConnectionIdToPlayer(string connectionId)
+        public Guid AddConnectionId(string connectionId)
         {
             Guid playerId = Guid.NewGuid();
             _playerMemoryRepository.AddPlayer(playerId, connectionId);
             return playerId;
         }
 
+        public Guid? RemoveConnectionId(string connectionId)
+        {
+            var playerId = GetPlayerId(connectionId);
+            _playerMemoryRepository.RemovePlayer(connectionId);
+            return playerId;
+        }
+
         public string? GetConnectionId(Guid playerId)
         {
             return _playerMemoryRepository.GetConnectionId(playerId);
-            // TODO: Exception handling
         }
 
-        public Guid? GetPlayerId(string connectionId)
+        private Guid? GetPlayerId(string connectionId)
         {
             return _playerMemoryRepository.GetPlayerId(connectionId);
         }

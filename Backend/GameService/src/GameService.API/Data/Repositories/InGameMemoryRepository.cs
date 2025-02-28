@@ -1,16 +1,21 @@
-﻿using System.Collections.Concurrent;
+﻿using GameService.API.Domain.DTOs;
+using System.Collections.Concurrent;
 
 namespace GameService.API.src.Data.Repositories
 {
     public class InGameMemoryRepository : IGameRepository
     {
         private static ConcurrentQueue<Guid> waitingPlayers = new();
-        private static readonly ConcurrentDictionary<Guid, Guid> playerToOpponent = new();
-        private static readonly ConcurrentDictionary<Guid, Guid> opponentToPlayer = new();
+        private static readonly ConcurrentBag<Game> activeGames = [];
+        private static readonly object queueLock = new object();
 
-        public bool TryDequeueOpponent(out Guid opponentId)
+        public Guid? MatchWithFirstPersonInQueue()
         {
-            return waitingPlayers.TryDequeue(out opponentId);
+            if (waitingPlayers.TryDequeue(out var opponentId))
+            {
+                return opponentId;
+            }
+            return null;
         }
 
         public void EnqueuePlayer(Guid playerId)
@@ -18,10 +23,22 @@ namespace GameService.API.src.Data.Repositories
             waitingPlayers.Enqueue(playerId);
         }
 
-        public void AddToActiveGames(Guid playerId, Guid opponentId)
+        public void DequeuePlayer(Guid playerId)
         {
-            playerToOpponent[playerId] = opponentId;
-            opponentToPlayer[opponentId] = playerId;
+            lock (queueLock) // Make sure that no changes are being made to the queue while we are removing the player
+            {
+                var newQueue = new ConcurrentQueue<Guid>();
+
+                while (waitingPlayers.TryDequeue(out var player))
+                {
+                    if (player != playerId)
+                    {
+                        newQueue.Enqueue(player);
+                    }
+                }
+
+                Interlocked.Exchange(ref waitingPlayers, newQueue);
+            }
         }
 
         public bool PlayerInQueue(Guid playerId)
@@ -31,32 +48,27 @@ namespace GameService.API.src.Data.Repositories
 
         public bool PlayerInGame(Guid playerId)
         {
-            return playerToOpponent.ContainsKey(playerId) || opponentToPlayer.ContainsKey(playerId);
+            return activeGames.Any(g => g.Player1Id == playerId || g.Player2Id == playerId);
         }
 
-        public Guid? GetOpponent(Guid playerId)
+        public void AddGame(Game game)
         {
-            if (playerToOpponent.TryGetValue(playerId, out Guid opponentId))
+            activeGames.Add(game);
+        }
+
+        public bool RemoveGame(Guid gameId)
+        {
+            var game = activeGames.FirstOrDefault(g => g.GameId == gameId);
+            if (game != null)
             {
-                return opponentId;
+               return activeGames.TryTake(out game);
             }
-            if (opponentToPlayer.TryGetValue(playerId, out Guid opponentIdFromOpponent))
-            {
-                return opponentIdFromOpponent;
-            }
-            return null;
+            return false;
         }
 
-        public void RemoveFromGame(Guid playerId, Guid opponentId)
+        public Game? GetGameByPlayerId(Guid playerId)
         {
-            // TODO: Not working
-            playerToOpponent.TryRemove(playerId, out _);
-            opponentToPlayer.TryRemove(opponentId, out _);
-        }
-
-        public void RemoveFromWaitingQueue(Guid playerId)
-        {
-            waitingPlayers = new ConcurrentQueue<Guid>(waitingPlayers.Where(id => id != playerId));
+            return activeGames.FirstOrDefault(g => g.Player1Id == playerId || g.Player2Id == playerId);
         }
     }
 }

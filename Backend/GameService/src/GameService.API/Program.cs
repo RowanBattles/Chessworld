@@ -21,7 +21,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddSingleton<IGameService, GameService.API.Business.Services.GameService>();
 builder.Services.AddSingleton<IGameRepository, InGameMemoryRepository>();
 builder.Services.AddSingleton<IPlayerService, PlayerService>();
-builder.Services.AddSingleton<IPlayerMemoryRepository, PlayerMemoryRepository>();
+builder.Services.AddSingleton<IPlayerRepository, PlayerMemoryRepository>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

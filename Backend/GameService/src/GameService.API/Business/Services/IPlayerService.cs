@@ -2,8 +2,8 @@
 {
     public interface IPlayerService
     {
-        Guid AddConnectionIdToPlayer(string connectionId);
+        Guid AddConnectionId(string connectionId);
+        Guid? RemoveConnectionId(string connectionId);
         string? GetConnectionId(Guid playerId);
-        Guid? GetPlayerId(string connectionId);
     }
 }
