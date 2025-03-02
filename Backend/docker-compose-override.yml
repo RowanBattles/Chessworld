@@ -1,0 +1,4 @@
+services:
+  gameservice:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development

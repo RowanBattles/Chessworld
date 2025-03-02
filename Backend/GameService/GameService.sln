@@ -7,7 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameService.API", "src\Game
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameService.Tests", "test\GameService.Tests\GameService.Tests.csproj", "{EEE498AE-BC4C-4792-9AC1-7B1DF82093A9}"
 EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{95B4E200-BA43-4334-B55B-C60A975EF5B6}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		Dockerfile = Dockerfile
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,12 +26,11 @@ Global
 		{EEE498AE-BC4C-4792-9AC1-7B1DF82093A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EEE498AE-BC4C-4792-9AC1-7B1DF82093A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EEE498AE-BC4C-4792-9AC1-7B1DF82093A9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{95B4E200-BA43-4334-B55B-C60A975EF5B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{95B4E200-BA43-4334-B55B-C60A975EF5B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{95B4E200-BA43-4334-B55B-C60A975EF5B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{95B4E200-BA43-4334-B55B-C60A975EF5B6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DAE0B074-5E99-49AB-855B-89BCBA370185}
 	EndGlobalSection
 EndGlobal
