@@ -1,0 +1,7 @@
+services:
+  gameservice:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+  apigateway:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development

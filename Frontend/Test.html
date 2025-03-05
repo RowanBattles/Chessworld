@@ -16,7 +16,8 @@
 
     <script>
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("http://localhost:8080/gamehub")
+            .withUrl("http://localhost:5000/gamehub")
+            .configureLogging(signalR.LogLevel.Trace) // Enable detailed logging
             .build();
 
         let playerId = null; // Declare playerId globally
