@@ -1,25 +1,19 @@
 ﻿{
   "Routes": [
     {
-      "DownstreamPathTemplate": "/gamehub",
+      "DownstreamPathTemplate": "/gamehub/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
-        { "Host": "gameservice", "Port": 8080 }
+        {
+          "Host": "${GAMESERVICE_HOST}",
+          "Port": 8080
+        }
       ],
-      "UpstreamPathTemplate": "/gamehub",
-      "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ],
-      "EnableWebSockets": true,
-      "UseWebSockets": true,
-      "AdditionalRequestHeadersToForward": [ "Upgrade", "Connection", "Sec-WebSocket-Version", "Sec-WebSocket-Key", "Sec-WebSocket-Extensions" ]
-    },
-    {
-      "DownstreamPathTemplate": "/gamehub/negotiate",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        { "Host": "gameservice", "Port": 8080 }
-      ],
-      "UpstreamPathTemplate": "/gamehub/negotiate",
-      "UpstreamHttpMethod": [ "POST", "OPTIONS" ]
+      "UpstreamPathTemplate": "/gamehub/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE"]
     }
-  ]
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:5000"
+  }
 }

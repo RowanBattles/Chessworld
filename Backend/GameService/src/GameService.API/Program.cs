@@ -27,7 +27,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-
 builder.Services.AddSingleton<IGameService, GameService.API.Business.Services.GameService>();
 builder.Services.AddSingleton<IGameRepository, InGameMemoryRepository>();
 builder.Services.AddSingleton<IPlayerService, PlayerService>();
