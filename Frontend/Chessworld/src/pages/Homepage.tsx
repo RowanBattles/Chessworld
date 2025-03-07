@@ -11,7 +11,6 @@ const Homepage: React.FC = () => {
 
   return (
     <div className="p-6 text-center">
-      <h1 className="text-2xl font-bold">Game Lobby</h1>
       <p>Player ID: {playerId || "Not connected"}</p>
 
       <div className="space-x-2 mt-4">
@@ -25,8 +24,6 @@ const Homepage: React.FC = () => {
           Leave Game
         </button>
       </div>
-
-      <p className="mt-4">{messages}</p>
     </div>
   );
 };
