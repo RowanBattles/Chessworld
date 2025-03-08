@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import * as signalR from "@microsoft/signalr";
 
 interface WebSocketContextProps {
   playerId: string | null;
+  opponentId: string | null;
   messages: string;
   connect: () => void;
   findGame: () => void;
@@ -21,8 +21,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     null
   );
   const [playerId, setPlayerId] = useState<string | null>(null);
+  const [opponentId, setOpponentId] = useState<string | null>(null); // Add opponentId state
   const [messages, setMessages] = useState<string>("");
-  const navigate = useNavigate(); // Navigation hook
 
   useEffect(() => {
     const conn = new signalR.HubConnectionBuilder()
@@ -30,14 +30,14 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
       .build();
 
     conn.on("ReceivePlayerId", (id: string) => {
+      // console.log("Player ID:", id);
       setPlayerId(id);
-      console.log("Player ID:", id);
     });
 
-    conn.on("GameFound", (gameId: string) => {
-      console.log("Game found! ID:", gameId);
-      setMessages(`Game found! Redirecting to game ${gameId}...`);
-      navigate(`/game/${gameId}`); // Redirect to game page
+    conn.on("GameFound", (opponentId: string) => {
+      // console.log("Opponent found! ID:", opponentId);
+      setOpponentId(opponentId);
+      setMessages(`Opponent found! ID: ${opponentId}`);
     });
 
     conn.on("WaitingForOpponent", () => {
@@ -49,7 +49,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     setConnection(conn);
-  }, [navigate]);
+  }, []);
 
   const connect = async () => {
     if (connection) {
@@ -87,7 +87,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <WebSocketContext.Provider
-      value={{ playerId, messages, connect, findGame, leaveGame }}
+      value={{ playerId, opponentId, messages, connect, findGame, leaveGame }}
     >
       {children}
     </WebSocketContext.Provider>

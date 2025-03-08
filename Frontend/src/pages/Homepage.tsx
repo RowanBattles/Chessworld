@@ -4,6 +4,7 @@ import { useWebSocket } from "../context/WebSocketContext";
 const Homepage: React.FC = () => {
   const webSocketContext = useWebSocket();
   const playerId = webSocketContext?.playerId;
+  const opponentId = webSocketContext?.opponentId;
   const messages = webSocketContext?.messages;
   const connect = webSocketContext?.connect;
   const findGame = webSocketContext?.findGame;
@@ -11,6 +12,7 @@ const Homepage: React.FC = () => {
 
   return (
     <div className="p-6 text-center">
+      <h1 className="text-2xl font-bold">Homepage</h1>
       <p>Player ID: {playerId || "Not connected"}</p>
 
       <div className="space-x-2 mt-4">
@@ -24,6 +26,7 @@ const Homepage: React.FC = () => {
           Leave Game
         </button>
       </div>
+      {opponentId ? <p>Opponent found: {opponentId}</p> : <p>{messages}</p>}
     </div>
   );
 };
