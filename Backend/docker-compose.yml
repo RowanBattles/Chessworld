@@ -20,8 +20,24 @@ services:
       - "5000:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
+      - GAMESERVICE_HOST=gameservice
+      - MATCHMAKINGSERVICE_HOST=matchmakingservice
     depends_on:
       - gameservice
+      - matchmakingservice
+    networks:
+      - chess-network
+
+  matchmakingservice:
+    container_name: matchmakingservice
+    build:
+      context: ./MatchmakingService
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:8082
     networks:
       - chess-network
 

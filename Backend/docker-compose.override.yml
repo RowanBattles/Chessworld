@@ -7,3 +7,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
       - GAMESERVICE_HOST=gameservice
+      - MATCHMAKINGSERVICE_HOST=matchmakingservice
+  matchmakingservice:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development

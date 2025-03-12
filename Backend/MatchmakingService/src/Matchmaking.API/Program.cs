@@ -1,0 +1,61 @@
+using GameService.API.Data.Repositories;
+using Matchmaking.API.API.Controllers;
+using Matchmaking.API.Business.Infrastructure;
+using Matchmaking.API.Business.Services;
+using Matchmaking.API.Data.Interfaces;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
+// Register services as singletons
+builder.Services.AddSingleton<IMatchmakingService, MatchmakingService>();
+builder.Services.AddSingleton<IMatchmakingRepository, InMemoryMatchmakingRepository>();
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    // Disable HTTPS redirection in development
+    app.Use(async (context, next) =>
+    {
+        context.Request.Scheme = "http";
+        await next();
+    });
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseHttpsRedirection();
+}
+
+app.UseRouting();
+
+app.UseAuthorization();
+
+app.UseCors("CorsPolicy");
+
+app.MapControllers();
+
+app.Run();
