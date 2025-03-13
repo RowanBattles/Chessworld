@@ -1,8 +1,5 @@
-using GameService.API.API.Hubs;
-using GameService.API.Business.Services;
-using GameService.API.Data.Repositories;
-using GameService.API.src.Business.Services;
-using GameService.API.src.Data.Repositories;
+using GameService.API.Business.Interfaces;
+using GameService.API.Data.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,9 +25,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddSingleton<IGameService, GameService.API.Business.Services.GameService>();
-builder.Services.AddSingleton<IGameRepository, InGameMemoryRepository>();
-builder.Services.AddSingleton<IPlayerService, PlayerService>();
-builder.Services.AddSingleton<IPlayerRepository, PlayerMemoryRepository>();
+builder.Services.AddSingleton<IGameRepository, InGameRepository>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -53,9 +48,5 @@ app.UseCors("CorsPolicy");
 app.UseAuthorization();
 
 app.MapControllers();
-
-app.UseWebSockets();
-
-app.MapHub<GameHub>("/gamehub");
 
 app.Run();

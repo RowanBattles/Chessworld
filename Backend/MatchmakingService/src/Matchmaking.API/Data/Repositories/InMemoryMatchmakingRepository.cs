@@ -1,14 +1,26 @@
 ﻿using Matchmaking.API.Data.Interfaces;
+using System.Collections.Concurrent;
 
 namespace GameService.API.Data.Repositories
 {
     public class InMemoryMatchmakingRepository : IMatchmakingRepository
     {
-        private static readonly Dictionary<Guid, string> _players = new();
+        private static readonly ConcurrentQueue<Guid> _players = new();
 
-        public void AddPlayer(Guid playerId, string connectionId)
+        public void EnqueuePlayer(Guid playerId)
         {
-            _players.Add(playerId, connectionId);
+            _players.Enqueue(playerId);
+        }
+
+        public Guid? GetFirstPlayerInQueue()
+        {
+            if (_players.IsEmpty)
+            {
+                return null;
+            }
+
+            _players.TryPeek(out Guid firstPlayer);
+            return firstPlayer;
         }
     }
 }

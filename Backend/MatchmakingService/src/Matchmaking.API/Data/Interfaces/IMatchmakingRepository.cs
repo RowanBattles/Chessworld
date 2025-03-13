@@ -3,6 +3,7 @@ namespace Matchmaking.API.Data.Interfaces
 {
     public interface IMatchmakingRepository
     {
-        void AddPlayer(Guid playerId, string connectionId);
+        void EnqueuePlayer(Guid playerId);
+        Guid? GetFirstPlayerInQueue();
     }
 }
