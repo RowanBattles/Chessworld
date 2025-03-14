@@ -4,6 +4,6 @@ namespace GameService.API.Business.Interfaces
 {
     public interface IGameRepository
     {
-        bool AddGame(GameModel gameModel);
+        Task AddGameAsync(GameModel gameModel);
     }
 }

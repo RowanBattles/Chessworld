@@ -1,7 +1,5 @@
-﻿using GameService.API.API.Responses;
-using GameService.API.Business.Interfaces;
+﻿using GameService.API.Business.Interfaces;
 using GameService.API.Contract.Mappers;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -12,24 +10,28 @@ namespace GameService.API.API.Controllers
     public class GameController : ControllerBase
     {
         private readonly IGameService _gameService;
+        private readonly ILogger<GameController> _logger;
 
-        public GameController(IGameService gameService)
+        public GameController(IGameService gameService, ILogger<GameController> logger)
         {
             _gameService = gameService;
+            _logger = logger;
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateGame([FromBody] GameRequestModel gameRequestModel)
+        public async Task<IActionResult> CreateGame(Guid whiteId, Guid blackId)
         {
-            if (gameRequestModel == null)
+            var gameModel = GameMapper.ToGameModel(whiteId, blackId);
+            try
             {
-                return BadRequest("Game request model is null.");
+                await _gameService.CreateGameAsync(gameModel);
+                return Ok(gameModel.Id);
             }
-
-            var gameModel = GameMapper.ToGameModel(gameRequestModel);
-            var gameId = await _gameService.CreateGame(gameModel);
-
-            return Ok(gameId);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating game");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Game could not be created");
+            }
         }
     }
 }

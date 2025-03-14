@@ -8,11 +8,15 @@ namespace GameService.API.Data.Repository
 {
     public class InGameRepository : IGameRepository
     {
-        private readonly ConcurrentDictionary<Guid, GameEntity> _games = new();
-        public bool AddGame(GameModel gameModel)
+        private readonly ConcurrentBag<GameEntity> _games = new();
+
+        public Task AddGameAsync(GameModel gameModel)
         {
-            GameEntity gameEntity = GameMapper.ToGameEntity(gameModel);
-            return _games.TryAdd(gameModel.Id, gameEntity);
+            return Task.Run(() =>
+            {
+                GameEntity gameEntity = GameMapper.ToGameEntity(gameModel);
+                _games.Add(gameEntity);
+            });
         }
     }
 }

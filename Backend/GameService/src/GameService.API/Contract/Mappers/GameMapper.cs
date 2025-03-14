@@ -1,5 +1,4 @@
-﻿using GameService.API.API.Responses;
-using GameService.API.Business.Models;
+﻿using GameService.API.Business.Models;
 using GameService.API.Contract.Enums;
 using GameService.API.Data.Entity;
 
@@ -7,15 +6,12 @@ namespace GameService.API.Contract.Mappers
 {
     public static class GameMapper
     {
-        public static GameModel ToGameModel(GameRequestModel requestModel)
+        public static GameModel ToGameModel(Guid whiteId, Guid blackId)
         {
-            var white = requestModel.Player1Color.ToLower() == "white" ? requestModel.Player1Id : requestModel.Player2Id;
-            var black = requestModel.Player1Color.ToLower() == "black" ? requestModel.Player1Id : requestModel.Player2Id;
-
             return new GameModel(
-                requestModel.GameId,
-                white,
-                black,
+                Guid.NewGuid(),
+                whiteId,
+                blackId,
                 GameStatus.InProgress
             );
         }

@@ -1,5 +1,4 @@
 using GameService.API.Data.Repositories;
-using Matchmaking.API.API.Controllers;
 using Matchmaking.API.Business.Infrastructure;
 using Matchmaking.API.Business.Services;
 using Matchmaking.API.Data.Interfaces;
@@ -8,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -28,7 +28,6 @@ builder.Services.AddCors(options =>
 // Register services as singletons
 builder.Services.AddSingleton<IMatchmakingService, MatchmakingService>();
 builder.Services.AddSingleton<IMatchmakingRepository, InMemoryMatchmakingRepository>();
-builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
 var app = builder.Build();
 
@@ -51,8 +50,6 @@ else
 }
 
 app.UseRouting();
-
-app.UseAuthorization();
 
 app.UseCors("CorsPolicy");
 

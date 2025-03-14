@@ -7,6 +7,19 @@ namespace GameService.API.Data.Repositories
     {
         private static readonly ConcurrentQueue<Guid> _players = new();
 
+        public void DequeuePlayer(Guid opponentId)
+        {
+            var playersList = _players.ToList();
+            _players.Clear();
+            foreach (var player in playersList)
+            {
+                if (player != opponentId)
+                {
+                    _players.Enqueue(player);
+                }
+            }
+        }
+
         public void EnqueuePlayer(Guid playerId)
         {
             _players.Enqueue(playerId);

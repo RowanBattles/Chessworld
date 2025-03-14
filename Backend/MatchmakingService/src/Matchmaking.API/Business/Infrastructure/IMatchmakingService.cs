@@ -1,7 +1,9 @@
-﻿namespace Matchmaking.API.Business.Infrastructure
+﻿
+namespace Matchmaking.API.Business.Infrastructure
 {
     public interface IMatchmakingService
     {
-        Task<(bool matchFound, string? gameUrl)> FindAndCreateGameA();
+        Task<(bool, string)> FindAndCreateGameAsync();
+        string? GetMatchStatus(string playerId);
     }
 }
