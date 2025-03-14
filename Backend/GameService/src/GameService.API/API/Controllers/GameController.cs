@@ -6,7 +6,7 @@ using System.Net;
 namespace GameService.API.API.Controllers
 {
     [ApiController]
-    [Route("api/games")]
+    [Route("/games")]
     public class GameController : ControllerBase
     {
         private readonly IGameService _gameService;

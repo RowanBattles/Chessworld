@@ -5,7 +5,12 @@ using Matchmaking.API.Data.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+var env = builder.Environment;
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
 builder.Services.AddHttpClient();
 builder.Services.AddControllers();
@@ -42,6 +47,12 @@ if (app.Environment.IsDevelopment())
         context.Request.Scheme = "http";
         await next();
     });
+    app.UseDeveloperExceptionPage();
+}
+else if (app.Environment.IsEnvironment("Docker"))
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
     app.UseDeveloperExceptionPage();
 }
 else

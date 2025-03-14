@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Matchmaking.API.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("/matchmaking")]
     public class MatchmakingController : ControllerBase
     {
         private readonly IMatchmakingService _matchmakingService;

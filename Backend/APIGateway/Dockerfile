@@ -19,12 +19,12 @@ RUN dotnet build "APIGateway.API.csproj" -c Release -o /app/build
 
 # Publish stage
 FROM build AS publish
-RUN dotnet publish "APIGateway.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "APIGateway.API.csproj" -c Release -o /app/publish
 
 # Final runtime image
 FROM base AS final
-WORKDIR /app
+WORKDIR /src
 COPY --from=publish /app/publish .
-COPY src/APIGateway.API/ocelot.json .
+COPY ["src/APIGateway.API/appsettings.json", "src/APIGateway.API/appsettings.Development.json", "src/APIGateway.API/ocelot.json", "./"]
 
 ENTRYPOINT ["dotnet", "APIGateway.API.dll"]

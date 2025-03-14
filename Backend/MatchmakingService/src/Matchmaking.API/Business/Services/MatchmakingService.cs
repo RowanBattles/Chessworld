@@ -31,7 +31,6 @@ namespace Matchmaking.API.Business.Services
             if (opponentId != null)
             {
                 Guid gameId = await CreateGameAsync(playerId, (Guid)opponentId);
-                // get succesfull response
                 _matchmakingRepository.DequeuePlayer((Guid)opponentId);
                 return (true, gameId.ToString());
             }
@@ -50,8 +49,8 @@ namespace Matchmaking.API.Business.Services
 
         private async Task<Guid> CreateGameAsync(Guid whiteId, Guid blackId)
         {
-            var requestUri = $"{_gameServiceBaseUrl}/api/games?whiteId={whiteId}&blackId={blackId}";
-
+            var requestUri = $"{_gameServiceBaseUrl}/games?whiteId={whiteId}&blackId={blackId}";
+            _logger.LogInformation($"gameServiceBaseUrl: {_gameServiceBaseUrl}");
             try
             {
                 var response = await _httpClient.PostAsync(requestUri, null);

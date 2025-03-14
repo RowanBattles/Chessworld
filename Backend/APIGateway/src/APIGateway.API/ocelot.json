@@ -1,16 +1,16 @@
 ﻿{
   "Routes": [
     {
-      "DownstreamPathTemplate": "/api/matchmaking/{everything}",
+      "DownstreamPathTemplate": "/matchmaking/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "matchmakingservice",
+          "Host": "localhost",
           "Port": 8082
         }
       ],
-      "UpstreamPathTemplate": "/api/matchmaking/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+      "UpstreamPathTemplate": "/matchmaking/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
     },
     {
       "DownstreamPathTemplate": "/gamehub/{everything}",
@@ -22,20 +22,8 @@
         }
       ],
       "UpstreamPathTemplate": "/gamehub/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ],
       "UseWebSockets": true
-    },
-    {
-      "DownstreamPathTemplate": "/matchmaking/{everything}",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "matchmakingservice",
-          "Port": 8082
-        }
-      ],
-      "UpstreamPathTemplate": "/matchmaking/{everything}",
-      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     }
   ],
   "GlobalConfiguration": {
