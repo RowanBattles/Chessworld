@@ -8,14 +8,28 @@ namespace GameService.API.Data.Repository
 {
     public class InGameRepository : IGameRepository
     {
-        private readonly ConcurrentBag<GameEntity> _games = new();
+        private readonly ConcurrentBag<GameEntity> _Activegames = new();
 
         public Task AddGameAsync(GameModel gameModel)
         {
             return Task.Run(() =>
             {
                 GameEntity gameEntity = GameMapper.ToGameEntity(gameModel);
-                _games.Add(gameEntity);
+                _Activegames.Add(gameEntity);
+            });
+        }
+
+        public Task<Guid> GetGameByPlayerIdAsync(Guid playerId)
+        {
+            return Task.Run(() => {
+                foreach (var game in _Activegames)
+                {
+                    if (game.White == playerId || game.Black == playerId)
+                    {
+                        return game.Id;
+                    }
+                }
+                return Guid.Empty;
             });
         }
     }

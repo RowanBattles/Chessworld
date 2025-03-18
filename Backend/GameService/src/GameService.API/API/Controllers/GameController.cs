@@ -18,8 +18,8 @@ namespace GameService.API.API.Controllers
             _logger = logger;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateGame(Guid whiteId, Guid blackId)
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateGame([FromQuery]Guid whiteId, [FromQuery]Guid blackId)
         {
             var gameModel = GameMapper.ToGameModel(whiteId, blackId);
             try
@@ -31,6 +31,21 @@ namespace GameService.API.API.Controllers
             {
                 _logger.LogError(ex, "Error creating game");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Game could not be created");
+            }
+        }
+
+        [HttpGet("status")]
+        public async Task<IActionResult> GetMatchStatus([FromQuery]Guid playerId)
+        {
+            try
+            {
+                Guid gameUrl = await _gameService.GetGameByPlayerIdAsync(playerId);
+                return Ok(gameUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting game status");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Game status could not be retrieved");
             }
         }
     }

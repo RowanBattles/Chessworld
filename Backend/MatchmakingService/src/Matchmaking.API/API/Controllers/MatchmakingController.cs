@@ -37,7 +37,7 @@ namespace Matchmaking.API.API.Controllers
 
 
         [HttpGet("matchstatus/{playerId}")]
-        public IActionResult GetMatchStatus([FromRoute] string playerId)
+        public async Task<IActionResult> GetMatchStatus([FromRoute] string playerId)
         {
             if (!Guid.TryParse(playerId, out _))
             {
@@ -46,8 +46,8 @@ namespace Matchmaking.API.API.Controllers
 
             try
             {
-                string? gameUrl = _matchmakingService.GetMatchStatus(playerId);
-                var response = new MatchStatusResponse(gameUrl != null, gameUrl ?? "In queue");
+                var (matchFound, gameUrl, message) = await _matchmakingService.GetMatchStatus(playerId);
+                var response = new MatchStatusResponse(matchFound, gameUrl, message);
                 return Ok(response);
             }
             catch (Exception ex)

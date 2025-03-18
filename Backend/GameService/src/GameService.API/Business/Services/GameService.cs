@@ -27,5 +27,18 @@ namespace GameService.API.Business.Services
                 throw new Exception("Game could not be created", ex);
             }
         }
+
+        public async Task<Guid> GetGameByPlayerIdAsync(Guid playerId)
+        {
+            try
+            {
+                return await _gameRepository.GetGameByPlayerIdAsync(playerId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving game for playerId");
+                throw new Exception("Game could not be retrieved", ex);
+            }
+        }
     }
 }
