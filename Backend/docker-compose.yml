@@ -10,6 +10,8 @@ services:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:8080
+
     networks:
       - chess-network
 
@@ -22,6 +24,7 @@ services:
       - "5000:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:5000
       - GAMESERVICE_HOST=gameservice
       - MATCHMAKINGSERVICE_HOST=matchmakingservice
     depends_on:
