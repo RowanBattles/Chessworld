@@ -5,15 +5,15 @@ namespace GameService.API.Business.Models
     public class GameModel
     {
         public Guid Id { get; set; }
-        public Guid White { get; private set; }
-        public Guid Black { get; private set; }
+        public string WhiteToken { get; private set; }
+        public string BlackToken { get; private set; }
         public GameStatus Status { get; private set; }
 
-        public GameModel(Guid id, Guid white, Guid black, GameStatus status)
+        public GameModel(Guid id, string whiteToken, string blackToken, GameStatus status)
         {
-            Id = id; 
-            White = white;
-            Black = black;
+            Id = id;
+            WhiteToken = whiteToken;
+            BlackToken = blackToken;
             Status = status;
         }
     }

@@ -28,15 +28,15 @@ namespace GameService.API.Business.Services
             }
         }
 
-        public async Task<Guid> GetGameByPlayerIdAsync(Guid playerId)
+        public async Task<Guid> GetGameByPlayerIdAsync(string playerToken)
         {
             try
             {
-                return await _gameRepository.GetGameByPlayerIdAsync(playerId);
+                return await _gameRepository.GetGameByPlayerIdAsync(playerToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving game for playerId");
+                _logger.LogError(ex, "Error retrieving game for playerToken");
                 throw new Exception("Game could not be retrieved", ex);
             }
         }

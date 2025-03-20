@@ -8,19 +8,19 @@ namespace GameService.API.Data.Entity
         public Guid Id { get; private set; }
 
         [Required]
-        public Guid White { get; private set; }
+        public string WhiteToken { get; private set; }
 
         [Required]
-        public Guid Black { get; private set; }
+        public string BlackToken { get; private set; }
 
         [Required]
         public int Status { get; private set; }
 
-        public GameEntity(Guid id, Guid white, Guid black, int status)
+        public GameEntity(Guid id, string whiteToken, string blackToken, int status)
         {
             Id = id;
-            White = white;
-            Black = black;
+            WhiteToken = whiteToken;
+            BlackToken = blackToken;
             Status = status;
         }
     }

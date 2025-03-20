@@ -24,8 +24,18 @@ namespace Matchmaking.API.API.Controllers
         {
             try
             {
-                var (matchFound, Id) = await _matchmakingService.FindAndCreateGameAsync();
-                var response = new FindGameResponse(matchFound, matchFound ? Id : null, !matchFound ? Id : null, matchFound ? "Match found" : "Put in queue");
+                var (matchFound, playerToken, gameId) = await _matchmakingService.FindAndCreateGameAsync();
+
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = false,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTime.UtcNow.AddHours(2)
+                };
+                Response.Cookies.Append("playerToken", playerToken, cookieOptions);
+
+                var response = new FindGameResponse(matchFound, gameId, message: matchFound ? "Match found" : "Put in queue");
                 return Ok(response);
             }
             catch (Exception ex)
@@ -35,18 +45,17 @@ namespace Matchmaking.API.API.Controllers
             }
         }
 
-
-        [HttpGet("matchstatus/{playerId}")]
-        public async Task<IActionResult> GetMatchStatus([FromRoute] string playerId)
+        [HttpGet("matchstatus")]
+        public async Task<IActionResult> GetMatchStatus()
         {
-            if (!Guid.TryParse(playerId, out _))
+            if (!Request.Cookies.TryGetValue("playerToken", out var playerToken) || string.IsNullOrEmpty(playerToken) || playerToken.Length != 8)
             {
-                return BadRequest("Invalid player ID format.");
+                return BadRequest("Invalid or missing player token. It must be a NanoID with a size of 8.");
             }
 
             try
             {
-                var (matchFound, gameUrl, message) = await _matchmakingService.GetMatchStatus(playerId);
+                var (matchFound, gameUrl, message) = await _matchmakingService.GetMatchStatus(playerToken);
                 var response = new MatchStatusResponse(matchFound, gameUrl, message);
                 return Ok(response);
             }

@@ -6,12 +6,12 @@ namespace GameService.API.Contract.Mappers
 {
     public static class GameMapper
     {
-        public static GameModel ToGameModel(Guid whiteId, Guid blackId)
+        public static GameModel ToGameModel(string whiteToken, string blackToken)
         {
             return new GameModel(
                 Guid.NewGuid(),
-                whiteId,
-                blackId,
+                whiteToken,
+                blackToken,
                 GameStatus.InProgress
             );
         }
@@ -20,8 +20,8 @@ namespace GameService.API.Contract.Mappers
         {
             return new GameEntity(
                 model.Id,
-                model.White,
-                model.Black,
+                model.WhiteToken,
+                model.BlackToken,
                 (int)model.Status
             );
         }
@@ -30,8 +30,8 @@ namespace GameService.API.Contract.Mappers
         {
             return new GameModel(
                 entity.Id,
-                entity.White,
-                entity.Black,
+                entity.WhiteToken,
+                entity.BlackToken,
                 (GameStatus)entity.Status
             );
         }

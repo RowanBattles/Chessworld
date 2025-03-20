@@ -19,12 +19,13 @@ namespace GameService.API.Data.Repository
             });
         }
 
-        public Task<Guid> GetGameByPlayerIdAsync(Guid playerId)
+        public Task<Guid> GetGameByPlayerIdAsync(string playerToken)
         {
-            return Task.Run(() => {
+            return Task.Run(() =>
+            {
                 foreach (var game in _Activegames)
                 {
-                    if (game.White == playerId || game.Black == playerId)
+                    if (game.WhiteToken == playerToken || game.BlackToken == playerToken)
                     {
                         return game.Id;
                     }

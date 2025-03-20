@@ -1,10 +1,7 @@
 ﻿using Matchmaking.API.Business.Infrastructure;
 using Matchmaking.API.Data.Interfaces;
-using System.Net.Http;
 using System.Text.Json;
-using System.Text;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
+using NanoidDotNet;
 
 namespace Matchmaking.API.Business.Services
 {
@@ -23,50 +20,63 @@ namespace Matchmaking.API.Business.Services
             _gameServiceBaseUrl = $"http://{configuration["DownstreamServices:GameService:Host"]}:{configuration["DownstreamServices:GameService:Port"]}";
         }
 
-        public async Task<(bool, string)> FindAndCreateGameAsync()
+        public async Task<(bool, string, string?)> FindAndCreateGameAsync()
         {
-            var playerId = Guid.NewGuid();
-            Guid? opponentId = _matchmakingRepository.GetFirstPlayerInQueue();
+            string playerToken = Nanoid.Generate("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", size: 8);
+            string? opponentToken = _matchmakingRepository.GetFirstPlayerInQueue();
 
-            if (opponentId != null)
+            if (opponentToken != null)
             {
-                Guid gameId = await CreateGameAsync(playerId, (Guid)opponentId);
-                _matchmakingRepository.DequeuePlayer((Guid)opponentId);
-                return (true, gameId.ToString());
+                try
+                {
+                    Guid gameId = await CreateGameAsync(playerToken, opponentToken);
+                    _matchmakingRepository.DequeuePlayer(opponentToken);
+                    return (true, playerToken, gameId.ToString());
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to create game.");
+                    return (false, playerToken, null);
+                }
             }
             else
             {
-                _matchmakingRepository.EnqueuePlayer(playerId);
-                return (false, playerId.ToString());
+                _matchmakingRepository.EnqueuePlayer(playerToken);
+                return (false, playerToken, null);
             }
         }
 
-        public async Task<(bool, string?, string)> GetMatchStatus(string playerId)
+        public async Task<(bool, string?, string)> GetMatchStatus(string playerToken)
         {
-            // player in queue?
-            bool playerInQueue = _matchmakingRepository.GetFirstPlayerInQueue() == Guid.Parse(playerId);
+            bool playerInQueue = _matchmakingRepository.GetFirstPlayerInQueue() == playerToken;
 
             if (playerInQueue)
             {
                 return (false, null, "In queue");
             }
 
-            // player in game?
-            Guid gameUrl = await GetGameUrlAsync(Guid.Parse(playerId));
-
-            if (gameUrl != Guid.Empty)
+            try
             {
-                return (true, gameUrl.ToString(), "Match found");
+                Guid gameId = await GetGameUrlAsync(playerToken);
+
+                if (gameId != Guid.Empty)
+                {
+                    return (true, gameId.ToString(), "Match found");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get match status.");
             }
 
-            // not found
             return (false, null, "Player not found");
         }
 
-        private async Task<Guid> CreateGameAsync(Guid whiteId, Guid blackId)
+        private async Task<Guid> CreateGameAsync(string whiteToken, string blackToken)
         {
-            var requestUri = $"{_gameServiceBaseUrl}/games/create?whiteId={whiteId}&blackId={blackId}";
-            _logger.LogInformation($"gameServiceBaseUrl: {_gameServiceBaseUrl}");
+            var requestUri = $"{_gameServiceBaseUrl}/games/create?whiteToken={whiteToken}&blackToken={blackToken}";
+            _logger.LogInformation($"Creating game with URL: {requestUri}");
+
             try
             {
                 var response = await _httpClient.PostAsync(requestUri, null);
@@ -80,12 +90,18 @@ namespace Matchmaking.API.Business.Services
                 _logger.LogError(ex, "Error calling GameService to create game.");
                 throw;
             }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Error deserializing response from GameService.");
+                throw;
+            }
         }
 
-        private async Task<Guid> GetGameUrlAsync(Guid playerId)
+        private async Task<Guid> GetGameUrlAsync(string playerToken)
         {
-            var requestUri = $"{_gameServiceBaseUrl}/games/status?playerId={playerId}";
-            _logger.LogInformation($"gameServiceBaseUrl: {_gameServiceBaseUrl}");
+            var requestUri = $"{_gameServiceBaseUrl}/games/status?playerToken={playerToken}";
+            _logger.LogInformation($"Getting game status with URL: {requestUri}");
+
             try
             {
                 var response = await _httpClient.GetAsync(requestUri);
@@ -97,6 +113,11 @@ namespace Matchmaking.API.Business.Services
             catch (HttpRequestException ex)
             {
                 _logger.LogError(ex, "Error calling GameService to get game URL.");
+                throw;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Error deserializing response from GameService.");
                 throw;
             }
         }

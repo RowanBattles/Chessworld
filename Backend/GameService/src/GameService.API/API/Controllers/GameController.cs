@@ -19,9 +19,9 @@ namespace GameService.API.API.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> CreateGame([FromQuery]Guid whiteId, [FromQuery]Guid blackId)
+        public async Task<IActionResult> CreateGame([FromQuery] string whiteToken, [FromQuery] string blackToken)
         {
-            var gameModel = GameMapper.ToGameModel(whiteId, blackId);
+            var gameModel = GameMapper.ToGameModel(whiteToken, blackToken);
             try
             {
                 await _gameService.CreateGameAsync(gameModel);
@@ -35,11 +35,11 @@ namespace GameService.API.API.Controllers
         }
 
         [HttpGet("status")]
-        public async Task<IActionResult> GetMatchStatus([FromQuery]Guid playerId)
+        public async Task<IActionResult> GetMatchStatus([FromQuery] string playerToken)
         {
             try
             {
-                Guid gameUrl = await _gameService.GetGameByPlayerIdAsync(playerId);
+                Guid gameUrl = await _gameService.GetGameByPlayerIdAsync(playerToken);
                 return Ok(gameUrl);
             }
             catch (Exception ex)

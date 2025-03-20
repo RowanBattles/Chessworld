@@ -5,6 +5,6 @@ namespace GameService.API.Business.Interfaces
     public interface IGameService
     {
         Task CreateGameAsync(GameModel gameModel);
-        Task<Guid> GetGameByPlayerIdAsync(Guid playerId);
+        Task<Guid> GetGameByPlayerIdAsync(string playerToken);
     }
 }

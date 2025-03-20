@@ -5,35 +5,35 @@ namespace GameService.API.Data.Repositories
 {
     public class InMemoryMatchmakingRepository : IMatchmakingRepository
     {
-        private static readonly ConcurrentQueue<Guid> _players = new();
+        private static readonly ConcurrentQueue<string> _players = new();
 
-        public void DequeuePlayer(Guid opponentId)
+        public void DequeuePlayer(string opponentToken)
         {
             var playersList = _players.ToList();
             _players.Clear();
             foreach (var player in playersList)
             {
-                if (player != opponentId)
+                if (player != opponentToken)
                 {
                     _players.Enqueue(player);
                 }
             }
         }
 
-        public void EnqueuePlayer(Guid playerId)
+        public void EnqueuePlayer(string playerToken)
         {
-            _players.Enqueue(playerId);
+            _players.Enqueue(playerToken);
         }
 
-        public Guid? GetFirstPlayerInQueue()
+        public string? GetFirstPlayerInQueue()
         {
             if (_players.IsEmpty)
             {
                 return null;
             }
 
-            _players.TryPeek(out Guid firstPlayer);
-            return firstPlayer;
+            _players.TryPeek(out string? firstPlayer);
+            return firstPlayer!;
         }
     }
 }
