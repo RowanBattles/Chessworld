@@ -1,0 +1,51 @@
+version: "3.8"
+
+services:
+  gameservice:
+    container_name: gameservice
+    build:
+      context: ./GameService
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:8080
+
+    networks:
+      - chess-network
+
+  apigateway:
+    container_name: apigateway
+    build:
+      context: ./ApiGateway
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:5000
+      - GAMESERVICE_HOST=gameservice
+      - MATCHMAKINGSERVICE_HOST=matchmakingservice
+    depends_on:
+      - gameservice
+      - matchmakingservice
+    networks:
+      - chess-network
+
+  matchmakingservice:
+    container_name: matchmakingservice
+    build:
+      context: ./MatchmakingService
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:8082
+    networks:
+      - chess-network
+
+networks:
+  chess-network:
+    driver: bridge
