@@ -8,30 +8,25 @@ namespace GameService.API.Data.Repository
 {
     public class InGameRepository : IGameRepository
     {
-        private readonly ConcurrentBag<GameEntity> _Activegames = new();
+        private readonly ConcurrentBag<GameEntity> _Activegames = new ConcurrentBag<GameEntity>();
 
-        public Task AddGameAsync(GameModel gameModel)
+        public async Task AddGame(GameModel gameModel)
         {
-            return Task.Run(() =>
-            {
-                GameEntity gameEntity = GameMapper.ToGameEntity(gameModel);
-                _Activegames.Add(gameEntity);
-            });
+            GameEntity gameEntity = GameMapper.ToGameEntity(gameModel);
+            _Activegames.Add(gameEntity);
+            await Task.CompletedTask;
         }
 
-        public Task<Guid> GetGameByPlayerIdAsync(string playerToken)
+        public async Task<GameModel?> GetGameByGameId(string gameId)
         {
-            return Task.Run(() =>
-            {
-                foreach (var game in _Activegames)
-                {
-                    if (game.WhiteToken == playerToken || game.BlackToken == playerToken)
-                    {
-                        return game.Id;
-                    }
-                }
-                return Guid.Empty;
-            });
+            var game = _Activegames.FirstOrDefault(g => g.Id.ToString() == gameId);
+            return await Task.FromResult(game != null ? GameMapper.ToGameModel(game) : null);
+        }
+
+        public async Task<Guid> GetGameByPlayerId(string playerToken)
+        {
+            var game = _Activegames.FirstOrDefault(g => g.WhiteToken == playerToken || g.BlackToken == playerToken);
+            return await Task.FromResult(game?.Id ?? Guid.Empty);
         }
     }
 }

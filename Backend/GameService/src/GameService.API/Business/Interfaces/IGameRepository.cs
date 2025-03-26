@@ -4,7 +4,8 @@ namespace GameService.API.Business.Interfaces
 {
     public interface IGameRepository
     {
-        Task AddGameAsync(GameModel gameModel);
-        Task<Guid> GetGameByPlayerIdAsync(string playerToken);
+        Task AddGame(GameModel gameModel);
+        Task<GameModel?> GetGameByGameId(string gameId);
+        Task<Guid> GetGameByPlayerId(string playerToken);
     }
 }

@@ -24,7 +24,7 @@ namespace GameService.API.API.Controllers
             var gameModel = GameMapper.ToGameModel(whiteToken, blackToken);
             try
             {
-                await _gameService.CreateGameAsync(gameModel);
+                await _gameService.CreateGame(gameModel);
                 return Ok(gameModel.Id);
             }
             catch (Exception ex)
@@ -39,7 +39,7 @@ namespace GameService.API.API.Controllers
         {
             try
             {
-                Guid gameUrl = await _gameService.GetGameByPlayerIdAsync(playerToken);
+                Guid gameUrl = await _gameService.GetStatusByPlayerId(playerToken);
                 return Ok(gameUrl);
             }
             catch (Exception ex)

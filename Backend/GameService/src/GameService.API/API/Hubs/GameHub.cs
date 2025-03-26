@@ -1,18 +1,28 @@
-﻿//using Microsoft.AspNetCore.SignalR;
+﻿using GameService.API.API.Responses;
+using GameService.API.Business.Interfaces;
+using Microsoft.AspNetCore.SignalR;
 
-//namespace GameService.API.API.Hubs
-//{
-//    public class GameHub : Hub
-//    {
-//        public override async Task onConnectedAsync()
-//        {
-//            string connectionId = Context.ConnectionId;
-//            await base.OnConnectedAsync();
-//        }
+namespace GameService.API.API.Hubs
+{
+    public class GameHub : Hub
+    {
+        private readonly IGameService _gameService;
 
-//        public async Task JoinGame(Guid gameId)
-//        {
-//            await Groups.AddToGroupAsync(Context.ConnectionId, gameId.ToString());
-//        }
-//    }
-//}
+        public GameHub(IGameService gameService)
+        {
+            _gameService = gameService;
+        }
+        public override Task OnConnectedAsync()
+        {
+            return base.OnConnectedAsync(); 
+        }
+
+        public async Task GetGame(string gameId)
+        {
+            var playerToken = Context.GetHttpContext()?.Request.Cookies["playerToken"];
+            var (role, status) = await _gameService.GetGameByGameId(playerToken, gameId);
+            var response = new GameResponse(role, status);
+            await Clients.Caller.SendAsync("GameStatus", response);
+        }
+    }
+}

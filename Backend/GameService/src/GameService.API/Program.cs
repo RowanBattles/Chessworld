@@ -1,3 +1,4 @@
+using GameService.API.API.Hubs;
 using GameService.API.Business.Interfaces;
 using GameService.API.Data.Repository;
 
@@ -47,6 +48,10 @@ app.UseCors("CorsPolicy");
 
 app.UseAuthorization();
 
+app.UseWebSockets();
+
 app.MapControllers();
+
+app.MapHub<GameHub>("/gamehub");
 
 app.Run();
