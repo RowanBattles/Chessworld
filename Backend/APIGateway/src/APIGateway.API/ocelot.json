@@ -5,7 +5,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "matchmakingservice",
+          "Host": "{MatchmakingServiceHost}",
           "Port": 8082
         }
       ],
@@ -17,7 +17,7 @@
       "DownstreamScheme": "ws",
       "DownstreamHostAndPorts": [
         {
-          "Host": "gameservice",
+          "Host": "{GameServiceHost}",
           "Port": 8080
         }
       ],
