@@ -43,11 +43,6 @@ namespace GameService.API.Business.Services
 
         public async Task<(string, string)> GetGameByGameId(string? playerToken, string gameId)
         {
-            if (string.IsNullOrEmpty(gameId))
-            {
-                throw new ArgumentException("Game ID cannot be null or empty", nameof(gameId));
-            }
-
             try
             {
                 var gameModel = await _gameRepository.GetGameByGameId(gameId);

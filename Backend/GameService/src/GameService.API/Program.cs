@@ -7,12 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Logging.AddConsole();
 
 // Add services to the container.
-builder.Services.AddSignalR(hubOptions =>
-{
-    hubOptions.EnableDetailedErrors = true;
-    hubOptions.KeepAliveInterval = TimeSpan.FromSeconds(10);
-    hubOptions.HandshakeTimeout = TimeSpan.FromSeconds(5);
-});
+builder.Services.AddSignalR();
 
 builder.Services.AddCors(options =>
 {
@@ -42,13 +37,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-
 app.UseCors("CorsPolicy");
 
-app.UseAuthorization();
+app.UseRouting();
 
-app.UseWebSockets();
+app.UseAuthorization();
 
 app.MapControllers();
 

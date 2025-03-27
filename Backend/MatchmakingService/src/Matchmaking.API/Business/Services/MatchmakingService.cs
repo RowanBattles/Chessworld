@@ -36,7 +36,7 @@ namespace Matchmaking.API.Business.Services
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to create game.");
-                    return (false, playerToken, null);
+                    throw;
                 }
             }
             else
