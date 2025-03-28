@@ -61,6 +61,11 @@ namespace GameService.API.Business.Services
 
                 return (role, gameModel.Status.ToString());
             }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogError(ex, "Game not found for gameId");
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving game for gameId");

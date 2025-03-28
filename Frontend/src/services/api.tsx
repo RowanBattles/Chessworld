@@ -14,3 +14,8 @@ export const getMatchStatus = async () => {
   const response = await apiClient.get("/matchmaking/matchstatus");
   return response.data;
 };
+
+export const getGameData = async (gameId: string) => {
+  const response = await apiClient.get(`/games/${gameId}`);
+  return response.data;
+};

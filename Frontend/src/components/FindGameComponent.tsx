@@ -1,19 +1,23 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { findGame, getMatchStatus } from "../services/api";
 
 const FindGameComponent: React.FC = () => {
   const [statusMessage, setStatusMessage] = useState<string>("");
+  const [isError, setIsError] = useState<boolean>(false);
   const [isDisabled, setIsDisabled] = useState(false);
+  const navigate = useNavigate();
 
   const pollMatchStatus = async () => {
     const poll = async () => {
       try {
         const response = await getMatchStatus();
-        console.log(response);
+        console.log("polling :", response);
+        setStatusMessage(response.message);
 
         if (response.matchFound) {
           setStatusMessage("Match found!");
-          setIsDisabled(false);
+          navigate(`/${response.gameId}`);
           return;
         }
 
@@ -21,6 +25,7 @@ const FindGameComponent: React.FC = () => {
       } catch (error) {
         console.error("Error while polling match status:", error);
         setStatusMessage("An error occurred while checking match status.");
+        setIsError(true);
         setIsDisabled(false);
       }
     };
@@ -31,24 +36,28 @@ const FindGameComponent: React.FC = () => {
   const handleFindGame = async () => {
     try {
       setIsDisabled(true);
+      setIsError(false);
       setStatusMessage("Searching for a game...");
       const response = await findGame();
-      console.log(response);
+      console.log("first response: ", response);
       setStatusMessage(response.message);
 
       if (!response.matchFound) {
         pollMatchStatus();
-        const initialStatus = await getMatchStatus();
-        console.log(initialStatus);
+      } else {
+        setStatusMessage("Match found!");
+        navigate(`/${response.gameId}`);
       }
     } catch (error) {
+      console.error("Error while finding a game:", error);
       setStatusMessage("An error occurred while finding a game.");
+      setIsError(true);
       setIsDisabled(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center pb-[10%] min-h-screen bg-gray-100">
       <h1 className="text-2xl font-bold mb-4">Find Game</h1>
       <button
         onClick={handleFindGame}
@@ -61,7 +70,13 @@ const FindGameComponent: React.FC = () => {
       >
         Find Game
       </button>
-      <p className="text-gray-700 mt-4 min-h-[1.5rem]">{statusMessage}</p>
+      <p
+        className={`mt-4 min-h-[1.5rem] ${
+          isError ? "text-red-500" : "text-gray-700"
+        }`}
+      >
+        {statusMessage}
+      </p>
     </div>
   );
 };

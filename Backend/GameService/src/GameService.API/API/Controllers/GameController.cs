@@ -1,4 +1,5 @@
-﻿using GameService.API.Business.Interfaces;
+﻿using GameService.API.API.Responses;
+using GameService.API.Business.Interfaces;
 using GameService.API.Contract.Mappers;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -46,6 +47,28 @@ namespace GameService.API.API.Controllers
             {
                 _logger.LogError(ex, "Error getting game status");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Game status could not be retrieved");
+            }
+        }
+
+        [HttpGet("{gameId}")]
+        public async Task<IActionResult> GetGame([FromRoute] string gameId)
+        {
+            try
+            {
+                string? playerToken = HttpContext.Request.Cookies["playerToken"];
+                (string role, string status) = await _gameService.GetGameByGameId(playerToken, gameId);
+                GameResponse response = new(role, status);
+                return Ok(response);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogError(ex, $"Game with ID {gameId} not found");
+                return NotFound("Game not found");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unexpected error getting game with ID {gameId}");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred");
             }
         }
     }
