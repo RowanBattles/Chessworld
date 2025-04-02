@@ -1,6 +1,5 @@
 ﻿using GameService.API.Business.Interfaces;
 using GameService.API.Business.Models;
-using GameService.API.Contract.Mappers;
 
 namespace GameService.API.Business.Services
 {
@@ -41,25 +40,21 @@ namespace GameService.API.Business.Services
             }
         }
 
-        public async Task<(string, string)> GetGameByGameId(string? playerToken, string gameId)
+        public async Task<(string, string?, string)> GetGameByGameId(string? playerToken, string gameId)
         {
             try
             {
-                var gameModel = await _gameRepository.GetGameByGameId(gameId);
+                var gameModel = await _gameRepository.GetGameByGameId(gameId) ?? throw new KeyNotFoundException("Game not found");
 
-                if (gameModel == null)
-                {
-                    throw new KeyNotFoundException("Game not found");
-                }
+                string color = playerToken == gameModel.WhiteToken ? "white" :
+                                playerToken == gameModel.BlackToken ? "black" :
+                                "white";
 
-                string role = playerToken switch
-                {
-                    _ when playerToken == gameModel.WhiteToken => "white",
-                    _ when playerToken == gameModel.BlackToken => "black",
-                    _ => "spectator"
-                };
+                string? validToken = playerToken == gameModel.WhiteToken ? gameModel.WhiteToken :
+                                    playerToken == gameModel.BlackToken ? gameModel.BlackToken :
+                                    null;
 
-                return (role, gameModel.Status.ToString());
+                return (gameModel.Status.ToString(), validToken, color);
             }
             catch (KeyNotFoundException ex)
             {

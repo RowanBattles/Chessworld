@@ -56,8 +56,8 @@ namespace GameService.API.API.Controllers
             try
             {
                 string? playerToken = HttpContext.Request.Cookies["playerToken"];
-                (string role, string status) = await _gameService.GetGameByGameId(playerToken, gameId);
-                GameResponse response = new(role, status);
+                (string status, string? validToken, string color) = await _gameService.GetGameByGameId(playerToken, gameId);
+                GameResponse response = new(gameId, status, validToken, color);
                 return Ok(response);
             }
             catch (KeyNotFoundException ex)

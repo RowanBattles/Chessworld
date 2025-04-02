@@ -6,6 +6,6 @@ namespace GameService.API.Business.Interfaces
     {
         Task CreateGame(GameModel gameModel);
         Task<Guid> GetStatusByPlayerId(string playerToken);
-        Task<(string, string)> GetGameByGameId(string? playerToken, string gameId);
+        Task<(string status, string? token, string color)> GetGameByGameId(string? playerToken, string gameId);
     }
 }

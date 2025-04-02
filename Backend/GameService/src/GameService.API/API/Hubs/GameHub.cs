@@ -17,45 +17,26 @@ namespace GameService.API.API.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            try
-            {
-                var gameId = Context.GetHttpContext()?.Request.Query["gameId"].FirstOrDefault();
-                if (gameId != null)
-                {
-                    await JoinGame(gameId);
-                }
-                else
-                {
-                    _logger.LogError("Game ID is missing in the query string.");
-                    await Clients.Caller.SendAsync("Error", "Game ID is missing in the query string.");
-                    Context.Abort();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while connecting.");
-                await Clients.Caller.SendAsync("Error", "An error occurred while connecting.");
-                Context.Abort();
-            }
+            await base.OnConnectedAsync();
         }
 
-        private async Task JoinGame(string gameId)
-        {
-            try
-            {
-                var playerToken = Context.GetHttpContext()?.Request.Cookies["playerToken"];
-                (string role, string status) = await _gameService.GetGameByGameId(playerToken, gameId);
+        //private async Task JoinGame(string gameId)
+        //{
+        //    try
+        //    {
+        //        var playerToken = Context.GetHttpContext()?.Request.Cookies["playerToken"];
+        //        (string role, string status) = await _gameService.GetGameByGameId(playerToken, gameId);
 
-                // TODO: Add to group
+        //        // TODO: Add to group
 
-                GameResponse response = new(role, status);
-                await Clients.Caller.SendAsync("GameJoined", response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"An error occurred while joining the game with ID {gameId}.");
-                await Clients.Caller.SendAsync("Error", "An error occurred while joining the game.");
-            }
-        }
+        //        GameResponse response = new(role, status);
+        //        await Clients.Caller.SendAsync("GameJoined", response);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, $"An error occurred while joining the game with ID {gameId}.");
+        //        await Clients.Caller.SendAsync("Error", "An error occurred while joining the game.");
+        //    }
+        //}
     }
 }
