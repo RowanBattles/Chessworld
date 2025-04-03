@@ -1,7 +1,12 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const NotFound: React.FC = () => {
+interface ErrorPageProps {
+  statusCode: number;
+  message: string;
+}
+
+const ErrorPage: React.FC<ErrorPageProps> = ({ statusCode, message }) => {
   const navigate = useNavigate();
 
   const handleGoHome = () => {
@@ -10,9 +15,13 @@ const NotFound: React.FC = () => {
 
   return (
     <div className="p-6 text-center">
-      <h1 className="text-4xl font-bold text-red-500">404 - Page Not Found</h1>
+      <h1 className="text-4xl font-bold text-red-500">
+        {statusCode} - {message}
+      </h1>
       <p className="mt-4 text-lg">
-        The page you are looking for does not exist.
+        {statusCode === 404
+          ? "The page you are looking for does not exist."
+          : "An error occurred. Please try again later."}
       </p>
       <button
         onClick={handleGoHome}
@@ -24,4 +33,4 @@ const NotFound: React.FC = () => {
   );
 };
 
-export default NotFound;
+export default ErrorPage;

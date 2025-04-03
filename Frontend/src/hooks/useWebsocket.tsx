@@ -1,55 +1,70 @@
-// import { useState, useEffect } from "react";
-// import * as signalR from "@microsoft/signalr";
+import { useState, useEffect } from "react";
+import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 
-// type GameResponse = {
-//   role: string;
-//   status: string;
-// };
+let connection: HubConnection | null = null;
 
-// const useWebSocket = (gameId: string) => {
-//   const [gameData, setGameData] = useState<GameResponse | null>(null);
-//   const [errorStatus, setErrorStatus] = useState<number | null>(null); // Track error status
-//   const [loading, setLoading] = useState<boolean>(true); // Track loading state
+const useWebSocket = (gameId: string, playerData: any) => {
+  const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
 
-//   useEffect(() => {
-//     const connectWebSocket = async () => {
-//       try {
-//         const connection = new signalR.HubConnectionBuilder()
-//           .withUrl(`/gamehub?gameId=${gameId}`, { withCredentials: true })
-//           .withAutomaticReconnect()
-//           .build();
+  useEffect(() => {
+    if (!gameId || !playerData) return;
 
-//         await connection.start();
-//         console.log("Connected to WebSocket");
+    const endpoint = playerData.isSpectator ? "/watch" : "/play";
 
-//         connection.on("GameJoined", (response: GameResponse) => {
-//           console.log("GameJoined received:", response);
-//           setGameData(response);
-//         });
+    const url = new URL(`http://localhost:8080${endpoint}`);
+    url.searchParams.append("gameId", gameId);
+    if (!playerData.isSpectator && playerData.id) {
+      url.searchParams.append("token", playerData.id);
+    }
 
-//         setLoading(false); // Connection established, stop loading
-//       } catch (err: any) {
-//         console.error("WebSocket connection error:", err);
+    const startConnection = async () => {
+      if (!connection) {
+        console.log("Connecting to:", url.toString());
+        connection = new HubConnectionBuilder().withUrl(url.toString()).build();
 
-//         // Check if the error is a 404
-//         if (err?.message?.includes("404")) {
-//           setErrorStatus(404);
-//         } else {
-//           setErrorStatus(500); // Generic error code for other issues
-//         }
+        connection.on("ReceiveMessage", (message) => {
+          setMessages((prevMessages) => [...prevMessages, message]);
+        });
 
-//         setLoading(false); // Stop loading after error
-//       }
-//     };
+        connection.onclose(() => {
+          console.log("WebSocket connection closed.");
+          connection = null;
+        });
+      }
 
-//     connectWebSocket();
+      if (
+        connection.state === "Connected" ||
+        connection.state === "Connecting"
+      ) {
+        console.log("Connection is already in progress or established.");
+        return;
+      }
 
-//     return () => {
-//       // Cleanup logic if needed
-//     };
-//   }, [gameId]);
+      try {
+        await connection.start();
+        console.log(`Connected to SignalR at ${url}`);
+      } catch (err) {
+        setError("Failed to connect to WebSocket");
+        console.error("Error connecting to SignalR:", err);
+      }
+    };
 
-//   return { gameData, errorStatus, loading };
-// };
+    startConnection();
 
-// export default useWebSocket;
+    return () => {
+      if (connection && connection.state === "Connected") {
+        connection
+          .stop()
+          .then(() => console.log("WebSocket connection stopped"))
+          .catch((err) =>
+            console.error("Error stopping WebSocket connection:", err)
+          );
+      }
+    };
+  }, [gameId, playerData]);
+
+  return { messages, error };
+};
+
+export default useWebSocket;

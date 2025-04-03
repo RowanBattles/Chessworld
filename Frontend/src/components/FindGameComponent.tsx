@@ -3,56 +3,65 @@ import { useNavigate } from "react-router-dom";
 import { findGame, getMatchStatus } from "../services/api";
 
 const FindGameComponent: React.FC = () => {
-  const [statusMessage, setStatusMessage] = useState<string>("");
-  const [isError, setIsError] = useState<boolean>(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [isError, setIsError] = useState(false);
   const [isDisabled, setIsDisabled] = useState(false);
   const navigate = useNavigate();
+
+  const updateStatus = ({
+    msg,
+    err = false,
+    disabled = true,
+  }: {
+    msg: string;
+    err?: boolean;
+    disabled?: boolean;
+  }) => {
+    setStatusMessage(msg);
+    setIsError(err);
+    setIsDisabled(disabled);
+  };
+
+  const updateStatusError = () => {
+    updateStatus({
+      msg: "An error occurred while finding a game.",
+      err: true,
+      disabled: false,
+    });
+  };
 
   const pollMatchStatus = async () => {
     const poll = async () => {
       try {
         const response = await getMatchStatus();
-        console.log("polling :", response);
-        setStatusMessage(response.message);
 
         if (response.matchFound) {
-          setStatusMessage("Match found!");
           navigate(`/${response.gameId}`);
           return;
         }
 
         setTimeout(poll, 500);
-      } catch (error) {
-        console.error("Error while polling match status:", error);
-        setStatusMessage("An error occurred while checking match status.");
-        setIsError(true);
-        setIsDisabled(false);
+      } catch {
+        updateStatusError;
       }
     };
-
     poll();
   };
 
   const handleFindGame = async () => {
     try {
-      setIsDisabled(true);
-      setIsError(false);
-      setStatusMessage("Searching for a game...");
+      updateStatus({ msg: "Searching for a game..." });
       const response = await findGame();
-      console.log("first response: ", response);
-      setStatusMessage(response.message);
 
-      if (!response.matchFound) {
-        pollMatchStatus();
-      } else {
-        setStatusMessage("Match found!");
+      if (response.matchFound) {
         navigate(`/${response.gameId}`);
+        return;
       }
-    } catch (error) {
-      console.error("Error while finding a game:", error);
-      setStatusMessage("An error occurred while finding a game.");
-      setIsError(true);
-      setIsDisabled(false);
+
+      updateStatus({ msg: response.message });
+      pollMatchStatus();
+    } catch {
+      updateStatusError;
     }
   };
 

@@ -1,23 +1,22 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getGameData } from "../services/api"; // Import the API function
-import NotFoundComponent from "../components/NotFoundComponent";
-import InternalServerErrorComponent from "../components/InternalServerErrorComponent";
-
-type GameData = {
-  role: string;
-  status: string;
-};
+import { getGameData } from "../services/api";
+import ErrorPage from "./ErrorPage";
+import useWebSocket from "../hooks/useWebsocket";
 
 const GamePage = () => {
-  // Explicitly define the type of gameId as a string
   const { gameId } = useParams<{ gameId: string }>();
-  const [gameData, setGameData] = useState<GameData | null>(null);
+  const [gameData, setGameData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<{
     status: number;
     message: string;
   } | null>(null);
+
+  const { messages, error: websocketError } = useWebSocket(
+    gameId || "",
+    gameData?.player
+  );
 
   useEffect(() => {
     const fetchGameData = async () => {
@@ -48,18 +47,18 @@ const GamePage = () => {
     fetchGameData();
   }, [gameId]);
 
+  useEffect(() => {
+    if (websocketError) {
+      console.error("WebSocket error:", websocketError);
+    }
+  }, [websocketError]);
+
   if (loading) {
     return <p>Loading...</p>;
   }
 
   if (error) {
-    if (error.status === 404) {
-      return <NotFoundComponent />;
-    }
-    if (error.status === 500) {
-      return <InternalServerErrorComponent />;
-    }
-    return <p>{error.message}</p>;
+    return <ErrorPage statusCode={error.status} message={error.message} />;
   }
 
   if (!gameData) {
@@ -68,8 +67,23 @@ const GamePage = () => {
 
   return (
     <div>
-      <p>Your Role: {gameData.role}</p>
+      {websocketError && (
+        <p className="text-red-500">
+          WebSocket error: {websocketError}. Please refresh the page or try
+          again later.
+        </p>
+      )}
+      <p>Your token: {gameData.player.id}</p>
       <p>Game Status: {gameData.status}</p>
+      <p>Color perspective: {gameData.player.color}</p>
+      <div>
+        <h3>Messages:</h3>
+        <ul>
+          {messages.map((msg, index) => (
+            <li key={index}>{msg}</li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };

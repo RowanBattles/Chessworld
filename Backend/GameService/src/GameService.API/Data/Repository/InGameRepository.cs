@@ -8,7 +8,7 @@ namespace GameService.API.Data.Repository
 {
     public class InGameRepository : IGameRepository
     {
-        private readonly ConcurrentBag<GameEntity> _Activegames = new ConcurrentBag<GameEntity>();
+        private readonly ConcurrentBag<GameEntity> _Activegames = [];
 
         public async Task AddGame(GameModel gameModel)
         {

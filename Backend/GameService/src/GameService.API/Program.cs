@@ -1,5 +1,6 @@
 using GameService.API.API.Hubs;
 using GameService.API.Business.Interfaces;
+using GameService.API.Business.Services;
 using GameService.API.Data.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSingleton<IGameService, GameService.API.Business.Services.GameService>();
 builder.Services.AddSingleton<IGameRepository, InGameRepository>();
+builder.Services.AddSingleton<IGameConnectionRepository, InGameConnectionRepository>();
+builder.Services.AddSingleton<IGameConnectionService, GameConnectionService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -45,6 +48,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapHub<GameHub>("/gamehub");
+app.UseWebSockets();
+
+app.MapHub<GameHub>("/play");
+app.MapHub<GameHub>("/watch");
 
 app.Run();
