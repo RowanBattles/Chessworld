@@ -5,6 +5,7 @@ namespace GameService.API.Business.Interfaces
     public interface IGameConnectionRepository
     {
         Task<GameConnectionModel?> GetGameConnectionAsync(Guid gameId);
+        Task<Guid> GetGameConnectionByConnectionIdAsync(string connectionId);
         Task AddGameConnectionAsync(GameConnectionModel gameConnectionModel);
         Task UpdateGameConnectionAsync(GameConnectionModel gameConnectionModel);
     }

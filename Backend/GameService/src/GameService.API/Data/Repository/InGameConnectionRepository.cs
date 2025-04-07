@@ -42,5 +42,17 @@ namespace GameService.API.Data.Repository
             _activeConnections[entity.GameId] = entity;
             await Task.CompletedTask;
         }
+
+        public async Task<Guid> GetGameConnectionByConnectionIdAsync(string connectionId)
+        {
+            foreach (var gameConnection in _activeConnections.Values)
+            {
+                if (gameConnection.ConnectionWhite == connectionId || gameConnection.ConnectionBlack == connectionId || gameConnection.ConnectionSpectators.Contains(connectionId))
+                {
+                    return await Task.FromResult(gameConnection.GameId);
+                }
+            }
+            return await Task.FromResult(Guid.Empty);
+        }
     }
 }

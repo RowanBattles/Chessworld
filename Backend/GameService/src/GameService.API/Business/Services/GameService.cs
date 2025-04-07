@@ -1,4 +1,5 @@
-﻿using GameService.API.Business.Interfaces;
+﻿using ChessDotNet;
+using GameService.API.Business.Interfaces;
 using GameService.API.Business.Models;
 
 namespace GameService.API.Business.Services
@@ -40,7 +41,7 @@ namespace GameService.API.Business.Services
             }
         }
 
-        public async Task<(string, string?, string)> GetGameByGameId(string? playerToken, string gameId)
+        public async Task<(string, string, string?, string)> GetGameByGameId(string? playerToken, Guid gameId)
         {
             try
             {
@@ -54,7 +55,7 @@ namespace GameService.API.Business.Services
                                     playerToken == gameModel.BlackToken ? gameModel.BlackToken :
                                     null;
 
-                return (gameModel.Status.ToString(), validToken, color);
+                return (gameModel.Status.ToString(), gameModel.Fen, validToken, color);
             }
             catch (KeyNotFoundException ex)
             {
@@ -65,6 +66,46 @@ namespace GameService.API.Business.Services
             {
                 _logger.LogError(ex, "Error retrieving game for gameId");
                 throw new InvalidOperationException("Game could not be retrieved", ex);
+            }
+        }
+
+        public async Task MakeMove(Guid gameId, string? color, string uci)
+        {
+            try
+            {
+                GameModel gameModel = await _gameRepository.GetGameByGameId(gameId) ?? throw new KeyNotFoundException("Game not found");
+
+                ChessGame board = new(gameModel.Fen);
+
+                Player player = new ChessGameHelper().ConvertStringToPlayerEnum(color);
+
+                Move move = new(uci[..2], uci.Substring(2, 2), player);
+
+                MoveType moveType = board.MakeMove(move, false);
+
+                if (moveType == MoveType.Invalid)
+                {
+                    throw new InvalidOperationException("Invalid move");
+                }
+
+                gameModel.UpdateBoard(board.GetFen());
+
+                await _gameRepository.UpdateGame(gameModel);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogError(ex, "Game not found for gameId");
+                throw;
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "Invalid move");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error making move");
+                throw new InvalidOperationException("Move could not be made", ex);
             }
         }
     }

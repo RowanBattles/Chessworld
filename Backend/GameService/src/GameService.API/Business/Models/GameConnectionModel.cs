@@ -27,11 +27,11 @@
             {
                 ConnectionWhite = connectionId;
             }
-            if (color == "black")
+            else if (color == "black")
             {
                 ConnectionBlack = connectionId;
             }
-            if (string.IsNullOrEmpty(color))
+            else if (string.IsNullOrEmpty(color))
             {
                 ConnectionSpectators.Add(connectionId);
             }
@@ -40,5 +40,34 @@
                 throw new ArgumentException("Invalid color");
             }
         }
+
+        public string? GetColorByConnectionId(string connectionId)
+        {
+            if (ConnectionWhite == connectionId)
+            {
+                return "white";
+            }
+            else if (ConnectionBlack == connectionId)
+            {
+                return "black";
+            }
+            else if (ConnectionSpectators.Contains(connectionId))
+            {
+                return null;
+            }
+            else
+            {
+                throw new ArgumentException("Connection ID not found");
+            }
+        }
+
+        public (bool, bool, int) StatusResponse()
+        {
+            bool white = !string.IsNullOrEmpty(ConnectionWhite);
+            bool black = !string.IsNullOrEmpty(ConnectionBlack);
+            int spectators = ConnectionSpectators.Count;
+            return (white, black, spectators);
+        }
+
     }
 }

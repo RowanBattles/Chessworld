@@ -22,13 +22,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="ChessDotNet" Version="1.0.0" />
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client.Core" Version="9.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="9.0.3" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.2" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.0" />
   </ItemGroup>
 
 </Project>

@@ -5,15 +5,13 @@ namespace GameService.API.API.Responses
 {
     public class GameResponse
     {
-        public string GameId { get; private set; }
-        public string Status { get; private set; }
+        public GameClass Game { get; private set; }
         public PlayerClass Player { get; private set; }
         public OpponentClass Opponent { get; private set; }
 
-        public GameResponse(string gameId, string status, string? token, string color)
+        public GameResponse(string gameId, string status, string fen, string? token, string color)
         {
-            GameId = gameId;
-            Status = status;
+            Game = new GameClass(gameId, status, fen);
             (Player, Opponent) = PlayerAssigningLogic(token, color);
         }
 
@@ -36,6 +34,20 @@ namespace GameService.API.API.Responses
                 return "white";
             }
             throw new ArgumentException("Invalid color value. Expected 'white' or 'black'.", nameof(color));
+        }
+
+        public class GameClass
+        {
+            public string GameId { get; private set; }
+            public string Status { get; private set; }
+            public string Fen { get; private set; }
+
+            public GameClass(string gameId, string status, string fen)
+            {
+                GameId = gameId;
+                Status = status;
+                Fen = fen;
+            }
         }
 
         public class PlayerClass

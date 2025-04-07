@@ -53,11 +53,16 @@ namespace GameService.API.API.Controllers
         [HttpGet("{gameId}")]
         public async Task<IActionResult> GetGame([FromRoute] string gameId)
         {
+            if (!Guid.TryParse(gameId, out Guid parsedGameId))
+            {
+                return BadRequest("Invalid game ID format");
+            }
+
             try
             {
                 string? playerToken = HttpContext.Request.Cookies["playerToken"];
-                (string status, string? validToken, string color) = await _gameService.GetGameByGameId(playerToken, gameId);
-                GameResponse response = new(gameId, status, validToken, color);
+                (string status, string fen, string? validToken, string color) = await _gameService.GetGameByGameId(playerToken, parsedGameId);
+                GameResponse response = new(gameId, status, fen, validToken, color);
                 return Ok(response);
             }
             catch (KeyNotFoundException ex)

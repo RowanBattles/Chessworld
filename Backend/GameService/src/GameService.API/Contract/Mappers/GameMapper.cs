@@ -11,8 +11,7 @@ namespace GameService.API.Contract.Mappers
             return new GameModel(
                 Guid.NewGuid(),
                 whiteToken,
-                blackToken,
-                GameStatus.InProgress
+                blackToken
             );
         }
 
@@ -22,7 +21,8 @@ namespace GameService.API.Contract.Mappers
                 model.Id,
                 model.WhiteToken,
                 model.BlackToken,
-                (int)model.Status
+                (int)model.Status,
+                model.Fen
             );
         }
 
@@ -32,8 +32,10 @@ namespace GameService.API.Contract.Mappers
                 entity.Id,
                 entity.WhiteToken,
                 entity.BlackToken,
-                (GameStatus)entity.Status
+                (GameStatus)entity.Status,
+                entity.Fen
             );
         }
     }
 }
+

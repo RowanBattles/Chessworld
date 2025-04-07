@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { getGameData } from "../services/api";
 import ErrorPage from "./ErrorPage";
 import useWebSocket from "../hooks/useWebsocket";
+import ChessBoard from "../components/ChessBoard";
 
 const GamePage = () => {
   const { gameId } = useParams<{ gameId: string }>();
@@ -13,7 +14,7 @@ const GamePage = () => {
     message: string;
   } | null>(null);
 
-  const { messages, error: websocketError } = useWebSocket(
+  const { error: websocketError, connection } = useWebSocket(
     gameId || "",
     gameData?.player
   );
@@ -26,6 +27,7 @@ const GamePage = () => {
         }
 
         const data = await getGameData(gameId);
+        console.log("Game data:", data);
         setGameData(data);
         setError(null);
       } catch (err: any) {
@@ -65,24 +67,23 @@ const GamePage = () => {
     return <p>Waiting for game data...</p>;
   }
 
+  console.log("fen", gameData.game.fen);
+
   return (
-    <div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       {websocketError && (
         <p className="text-red-500">
           WebSocket error: {websocketError}. Please refresh the page or try
           again later.
         </p>
       )}
-      <p>Your token: {gameData.player.id}</p>
-      <p>Game Status: {gameData.status}</p>
-      <p>Color perspective: {gameData.player.color}</p>
-      <div>
-        <h3>Messages:</h3>
-        <ul>
-          {messages.map((msg, index) => (
-            <li key={index}>{msg}</li>
-          ))}
-        </ul>
+      <div className="w-2/5 bg-white p-4 rounded-lg shadow-md">
+        <ChessBoard
+          color={gameData.player.color}
+          isSpectator={gameData.player.isSpectator}
+          fen={gameData.game.fen}
+          socket={connection}
+        />
       </div>
     </div>
   );

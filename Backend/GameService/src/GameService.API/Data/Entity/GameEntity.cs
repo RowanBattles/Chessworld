@@ -16,12 +16,16 @@ namespace GameService.API.Data.Entity
         [Required]
         public int Status { get; private set; }
 
-        public GameEntity(Guid id, string whiteToken, string blackToken, int status)
+        [Required]
+        public string Fen { get; private set; }
+
+        public GameEntity(Guid id, string whiteToken, string blackToken, int status, string fen)
         {
             Id = id;
             WhiteToken = whiteToken;
             BlackToken = blackToken;
             Status = status;
+            Fen = fen;
         }
     }
 }

@@ -5,7 +5,6 @@ let connection: HubConnection | null = null;
 
 const useWebSocket = (gameId: string, playerData: any) => {
   const [error, setError] = useState<string | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
 
   useEffect(() => {
     if (!gameId || !playerData) return;
@@ -22,10 +21,6 @@ const useWebSocket = (gameId: string, playerData: any) => {
       if (!connection) {
         console.log("Connecting to:", url.toString());
         connection = new HubConnectionBuilder().withUrl(url.toString()).build();
-
-        connection.on("ReceiveMessage", (message) => {
-          setMessages((prevMessages) => [...prevMessages, message]);
-        });
 
         connection.onclose(() => {
           console.log("WebSocket connection closed.");
@@ -64,7 +59,7 @@ const useWebSocket = (gameId: string, playerData: any) => {
     };
   }, [gameId, playerData]);
 
-  return { messages, error };
+  return { error, connection };
 };
 
 export default useWebSocket;
