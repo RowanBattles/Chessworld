@@ -24,6 +24,32 @@
       "UpstreamPathTemplate": "/games/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ],
       "UseWebSockets": true
+    },
+    {
+      "DownstreamPathTemplate": "/play/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "{GameServiceHost}",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/play/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ],
+      "UseWebSockets": true
+    },
+    {
+      "DownstreamPathTemplate": "/watch/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "{GameServiceHost}",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/watch/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ],
+      "UseWebSockets": true
     }
   ],
   "GlobalConfiguration": {

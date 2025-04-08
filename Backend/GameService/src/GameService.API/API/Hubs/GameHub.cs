@@ -91,8 +91,9 @@ namespace GameService.API.API.Hubs
         {
             string connectionId = Context.ConnectionId;
 
-            if (string.IsNullOrEmpty(connectionId) || string.IsNullOrEmpty(uci))
+            if (string.IsNullOrEmpty(connectionId))
             {
+                _logger.LogWarning("MakeMove aborted: Missing connection ID.");
                 Context.Abort();
                 return;
             }
@@ -101,11 +102,39 @@ namespace GameService.API.API.Hubs
             {
                 Guid gameId = await _gameConnectionService.GetGameIdByConnectionId(connectionId);
                 string? color = await _gameConnectionService.GetColorByConnectionId(gameId, connectionId);
-                await _gameService.MakeMove(gameId, color, uci);
-            }
-            catch
-            {
 
+                if (color == null)
+                {
+                    _logger.LogWarning("MakeMove aborted: Connection {ConnectionId} has no assigned color.", connectionId);
+                    await Clients.Caller.SendAsync("Error", "You are not assigned a color in this game.");
+                    return;
+                }
+
+                string fen = await _gameService.MakeMove(gameId, color, uci);
+
+                await Clients.Group(gameId.ToString()).SendAsync("ReceiveMove", fen);
+
+                _logger.LogInformation("Move {Uci} made by connection {ConnectionId} in game {GameId}.", uci, connectionId, gameId);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning(ex, "Validation failed for UCI move {Uci}.", uci);
+                await Clients.Caller.SendAsync("Error", ex.Message);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.LogError(ex, "MakeMove failed: Game not found for connection {ConnectionId}.", connectionId);
+                await Clients.Caller.SendAsync("Error", "Game not found.");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "MakeMove failed: Invalid move {Uci} by connection {ConnectionId}.", uci, connectionId);
+                await Clients.Caller.SendAsync("Error", "Invalid move.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error during MakeMove for connection {ConnectionId}.", connectionId);
+                await Clients.Caller.SendAsync("Error", "An unexpected error occurred.");
             }
         }
     }

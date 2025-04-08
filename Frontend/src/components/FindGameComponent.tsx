@@ -42,7 +42,7 @@ const FindGameComponent: React.FC = () => {
 
         setTimeout(poll, 500);
       } catch {
-        updateStatusError;
+        updateStatusError();
       }
     };
     poll();
@@ -61,7 +61,7 @@ const FindGameComponent: React.FC = () => {
       updateStatus({ msg: response.message });
       pollMatchStatus();
     } catch {
-      updateStatusError;
+      updateStatusError();
     }
   };
 

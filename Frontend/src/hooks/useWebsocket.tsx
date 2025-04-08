@@ -11,7 +11,7 @@ const useWebSocket = (gameId: string, playerData: any) => {
 
     const endpoint = playerData.isSpectator ? "/watch" : "/play";
 
-    const url = new URL(`http://localhost:8080${endpoint}`);
+    const url = new URL(`http://localhost:5000${endpoint}`);
     url.searchParams.append("gameId", gameId);
     if (!playerData.isSpectator && playerData.id) {
       url.searchParams.append("token", playerData.id);

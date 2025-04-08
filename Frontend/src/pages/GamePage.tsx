@@ -27,7 +27,6 @@ const GamePage = () => {
         }
 
         const data = await getGameData(gameId);
-        console.log("Game data:", data);
         setGameData(data);
         setError(null);
       } catch (err: any) {
@@ -66,8 +65,6 @@ const GamePage = () => {
   if (!gameData) {
     return <p>Waiting for game data...</p>;
   }
-
-  console.log("fen", gameData.game.fen);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">

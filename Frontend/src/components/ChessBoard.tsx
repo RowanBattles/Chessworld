@@ -1,5 +1,4 @@
-import { useEffect, useState, useRef } from "react";
-import { Chess } from "chess.js";
+import { useEffect, useState } from "react";
 import { Chessboard } from "react-chessboard";
 import { HubConnection } from "@microsoft/signalr";
 
@@ -10,29 +9,37 @@ const ChessBoard = ({
   socket,
 }: {
   color: "white" | "black";
-  isSpectator: boolean; // Add isSpectator as a required prop
+  isSpectator: boolean;
   fen: string;
   socket: HubConnection | null;
 }) => {
-  const [game] = useState(new Chess(fen));
   const [currentFen, setCurrentFen] = useState(fen);
   const [isPlayerTurn, setIsPlayerTurn] = useState(() => {
-    const turn = fen.split(" ")[1];
+    const turn = fen.split(" ")[1]; // Extract turn from FEN ("w" or "b")
     return (
       (turn === "w" && color === "white") || (turn === "b" && color === "black")
     );
   });
-  const boardRef = useRef<any>(null);
+
+  useEffect(() => {
+    const turn = fen.split(" ")[1]; // Extract turn from FEN
+    setIsPlayerTurn(
+      (turn === "w" && color === "white") || (turn === "b" && color === "black")
+    );
+    setCurrentFen(fen); // Update the board with the latest FEN
+  }, [fen, color]);
 
   useEffect(() => {
     if (!socket) return;
 
-    const handleReceiveMove = (move: any) => {
-      console.log("Move received from backend:", move);
-      game.move(move);
-      setCurrentFen(game.fen());
+    const handleReceiveMove = (fen: string) => {
+      console.log("Received FEN from server:", fen);
 
-      const nextTurn = game.turn();
+      // Update the board state
+      setCurrentFen(fen);
+
+      // Update the turn based on the new FEN
+      const nextTurn = fen.split(" ")[1]; // Extract turn from FEN
       setIsPlayerTurn(
         (nextTurn === "w" && color === "white") ||
           (nextTurn === "b" && color === "black")
@@ -44,7 +51,7 @@ const ChessBoard = ({
     return () => {
       socket.off("ReceiveMove", handleReceiveMove);
     };
-  }, [socket, game, color]);
+  }, [socket, color]);
 
   const onDrop = (sourceSquare: string, targetSquare: string) => {
     if (isSpectator) {
@@ -57,40 +64,25 @@ const ChessBoard = ({
       return false;
     }
 
-    const move = {
-      from: sourceSquare,
-      to: targetSquare,
-      promotion: "q",
-    };
+    const move = `${sourceSquare}${targetSquare}`;
 
-    const result = game.move(move);
-    if (result) {
-      setCurrentFen(game.fen());
-      setIsPlayerTurn(false);
+    if (socket?.state === "Connected") {
+      console.log("Sending move to backend:", move);
 
-      if (socket?.state === "Connected") {
-        const uciMove = `${move.from}${move.to}${move.promotion || ""}`;
-        console.log("Sending move to backend:", uciMove);
-
-        socket
-          .invoke("MakeMove", uciMove)
-          .then(() => {
-            console.log("Move sent to backend:", uciMove);
-          })
-          .catch((error) => {
-            console.error("Failed to send move to backend:", error);
-          });
-      } else {
-        console.error("WebSocket connection is not established.");
-      }
+      socket.invoke("MakeMove", move).catch((error) => {
+        console.error("Failed to send move to backend:", error);
+      });
+    } else {
+      console.error("WebSocket connection is not established.");
+      return false;
     }
-    return !!result;
+
+    return true;
   };
 
   const isDraggablePiece = ({ piece }: { piece: string }): boolean => {
-    if (isSpectator) return false; // Disable dragging for spectators
-    if (!isPlayerTurn) return false; // Disable dragging if it's not the player's turn
-
+    if (isSpectator) return false;
+    if (!isPlayerTurn) return false;
     const isWhitePiece = piece.startsWith("w");
     const isBlackPiece = piece.startsWith("b");
 
@@ -111,7 +103,6 @@ const ChessBoard = ({
           borderRadius: "8px",
           boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
         }}
-        ref={boardRef}
       />
     </div>
   );
