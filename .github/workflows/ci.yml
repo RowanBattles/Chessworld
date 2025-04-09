@@ -47,3 +47,12 @@ jobs:
 
       - name: Build backend services
         run: docker-compose -f docker-compose.yml build
+
+      - name: Start backend services
+        run: docker-compose -f docker-compose.yml up -d
+
+      - name: Run GameService tests
+        run: docker exec gameservice dotnet test /app/GameService/test/GameService.Tests/GameService.Tests.csproj --logger "trx"
+
+      - name: Tear down backend services
+        run: docker-compose -f docker-compose.yml down
