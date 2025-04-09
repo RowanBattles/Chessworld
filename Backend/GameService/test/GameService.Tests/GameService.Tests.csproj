@@ -31,10 +31,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Domain\" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<ProjectReference Include="..\..\src\GameService.API\GameService.API.csproj" />
 	</ItemGroup>
 

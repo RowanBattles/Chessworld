@@ -13,10 +13,11 @@ const GamePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ErrorType | null>(null);
 
-  const { error: websocketError, connection } = useWebSocket(
-    gameId || "",
-    gameData?.player
-  );
+  const {
+    error: websocketError,
+    connection,
+    isReconnecting,
+  } = useWebSocket(gameId || "", gameData?.player);
 
   useEffect(() => {
     const fetchGameData = async () => {
@@ -27,7 +28,6 @@ const GamePage = () => {
 
         const data = await getGameData(gameId);
         setGameData(data);
-        console.log("Game data:", data);
         setError(null);
       } catch (err) {
         if (err instanceof Error && "response" in err && err.response) {
@@ -76,6 +76,9 @@ const GamePage = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      {isReconnecting && (
+        <p className="text-yellow-500">Reconnecting to WebSocket...</p>
+      )}
       {websocketError && (
         <p className="text-red-500">
           WebSocket error: {websocketError}. Please refresh the page or try
