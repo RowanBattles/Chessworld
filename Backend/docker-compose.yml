@@ -3,6 +3,7 @@ version: "3.8"
 services:
   gameservice:
     container_name: gameservice
+    image: gameservice:latest
     build:
       context: ./GameService
       dockerfile: Dockerfile
@@ -17,6 +18,7 @@ services:
 
   apigateway:
     container_name: apigateway
+    image: apigateway:latest
     build:
       context: ./APIGateway
       dockerfile: Dockerfile
@@ -35,6 +37,7 @@ services:
 
   matchmakingservice:
     container_name: matchmakingservice
+    image: matchmakingservice:latest
     build:
       context: ./MatchmakingService
       dockerfile: Dockerfile
