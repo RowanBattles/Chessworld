@@ -46,6 +46,17 @@ services:
     networks:
       - chess-network
 
+  gameservice-tests:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    volumes:
+      - ./GameService:/app
+    working_dir: /app
+    command: dotnet test /app/test/GameService.Tests/GameService.Tests.csproj --logger "trx"
+    depends_on:
+      - gameservice
+    networks:
+      - chess-network
+
 networks:
   chess-network:
     driver: bridge
