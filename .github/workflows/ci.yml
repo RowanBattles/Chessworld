@@ -51,7 +51,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Install Docker Compose
-        uses: docker/compose-action@v2
+        uses: docker/compose-action@v3
 
       - name: Build backend services
         run: docker-compose -f docker-compose.yml build
