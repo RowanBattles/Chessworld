@@ -47,6 +47,7 @@ services:
       - chess-network
 
   gameservice-tests:
+    container_name: gameservice-tests
     image: mcr.microsoft.com/dotnet/sdk:8.0
     volumes:
       - ./GameService:/app
