@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { Chessboard } from "react-chessboard";
 import { HubConnection } from "@microsoft/signalr";
 
+const parseTurnFromFen = (fen: string): "white" | "black" => {
+  const turnChar = fen.split(" ")[1];
+  return turnChar === "w" ? "white" : "black";
+};
+
 const ChessBoard = ({
   color,
   isSpectator,
@@ -14,36 +19,16 @@ const ChessBoard = ({
   socket: HubConnection | null;
 }) => {
   const [currentFen, setCurrentFen] = useState(fen);
-  const [isPlayerTurn, setIsPlayerTurn] = useState(() => {
-    const turn = fen.split(" ")[1]; // Extract turn from FEN ("w" or "b")
-    return (
-      (turn === "w" && color === "white") || (turn === "b" && color === "black")
-    );
-  });
-
-  useEffect(() => {
-    const turn = fen.split(" ")[1]; // Extract turn from FEN
-    setIsPlayerTurn(
-      (turn === "w" && color === "white") || (turn === "b" && color === "black")
-    );
-    setCurrentFen(fen); // Update the board with the latest FEN
-  }, [fen, color]);
+  const [currentTurn, setCurrentTurn] = useState<"white" | "black">(
+    parseTurnFromFen(fen)
+  );
 
   useEffect(() => {
     if (!socket) return;
 
     const handleReceiveMove = (fen: string) => {
-      console.log("Received FEN from server:", fen);
-
-      // Update the board state
       setCurrentFen(fen);
-
-      // Update the turn based on the new FEN
-      const nextTurn = fen.split(" ")[1]; // Extract turn from FEN
-      setIsPlayerTurn(
-        (nextTurn === "w" && color === "white") ||
-          (nextTurn === "b" && color === "black")
-      );
+      setCurrentTurn(parseTurnFromFen(fen));
     };
 
     socket.on("ReceiveMove", handleReceiveMove);
@@ -52,6 +37,8 @@ const ChessBoard = ({
       socket.off("ReceiveMove", handleReceiveMove);
     };
   }, [socket, color]);
+
+  const isPlayerTurn = color === currentTurn;
 
   const onDrop = (sourceSquare: string, targetSquare: string) => {
     if (isSpectator) {

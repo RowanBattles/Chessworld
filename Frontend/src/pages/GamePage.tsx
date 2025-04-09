@@ -4,15 +4,14 @@ import { getGameData } from "../services/api";
 import ErrorPage from "./ErrorPage";
 import useWebSocket from "../hooks/useWebsocket";
 import ChessBoard from "../components/ChessBoard";
+import { ErrorType } from "../types/ErrorType";
+import { GameType } from "../types/GameType";
 
 const GamePage = () => {
   const { gameId } = useParams<{ gameId: string }>();
-  const [gameData, setGameData] = useState<any | null>(null);
+  const [gameData, setGameData] = useState<GameType | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<{
-    status: number;
-    message: string;
-  } | null>(null);
+  const [error, setError] = useState<ErrorType | null>(null);
 
   const { error: websocketError, connection } = useWebSocket(
     gameId || "",
@@ -28,15 +27,24 @@ const GamePage = () => {
 
         const data = await getGameData(gameId);
         setGameData(data);
+        console.log("Game data:", data);
         setError(null);
-      } catch (err: any) {
-        if (err.response?.status === 404) {
-          setError({ status: 404, message: "Game not found" });
-        } else if (err.response?.status === 500) {
-          setError({ status: 500, message: "An unexpected error occurred" });
+      } catch (err) {
+        if (err instanceof Error && "response" in err && err.response) {
+          const response = err.response as { status?: number };
+          if (response.status === 404) {
+            setError({ status: 404, message: "Game not found" });
+          } else if (response.status === 500) {
+            setError({ status: 500, message: "An unexpected error occurred" });
+          } else {
+            setError({
+              status: response.status || 0,
+              message: "An unknown error occurred",
+            });
+          }
         } else {
           setError({
-            status: err.response?.status || 0,
+            status: 0,
             message: "An unknown error occurred",
           });
         }

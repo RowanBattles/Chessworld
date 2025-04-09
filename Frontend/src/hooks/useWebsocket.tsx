@@ -1,9 +1,14 @@
 import { useState, useEffect } from "react";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
+import { playerData } from "../types/PlayerType";
 
 let connection: HubConnection | null = null;
 
-const useWebSocket = (gameId: string, playerData: any) => {
+const useWebSocket = (gameId: string, playerData?: playerData) => {
+  if (playerData === undefined) {
+    throw new Error("playerData is required");
+  }
+
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -19,11 +24,9 @@ const useWebSocket = (gameId: string, playerData: any) => {
 
     const startConnection = async () => {
       if (!connection) {
-        console.log("Connecting to:", url.toString());
         connection = new HubConnectionBuilder().withUrl(url.toString()).build();
 
         connection.onclose(() => {
-          console.log("WebSocket connection closed.");
           connection = null;
         });
       }
@@ -32,7 +35,6 @@ const useWebSocket = (gameId: string, playerData: any) => {
         connection.state === "Connected" ||
         connection.state === "Connecting"
       ) {
-        console.log("Connection is already in progress or established.");
         return;
       }
 
