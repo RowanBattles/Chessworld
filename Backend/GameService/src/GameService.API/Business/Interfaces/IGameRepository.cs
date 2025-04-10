@@ -7,6 +7,6 @@ namespace GameService.API.Business.Interfaces
         Task AddGame(GameModel gameModel);
         Task<GameModel?> GetGameByGameId(Guid gameId);
         Task<Guid> GetGameByPlayerId(string playerToken);
-        Task UpdateGame(GameModel gameModel);
+        Task<bool> UpdateGame(GameModel gameModel);
     }
 }

@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: matchmakingservice
+  name: frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: matchmakingservice
+      app: frontend
   template:
     metadata:
       labels:
-        app: matchmakingservice
+        app: frontend
     spec:
       containers:
-        - name: matchmakingservice
-          image: rowanbattles/matchmakingservice:latest
+        - name: frontend
+          image: rowanbattles/frontend:latest
           ports:
-            - containerPort: 8082
+            - containerPort: 3000
           env:
-            - name: ASPNETCORE_ENVIRONMENT
-              value: "Docker"
-            - name: ASPNETCORE_URLS
-              value: "http://+:8082"
+            - name: NODE_ENV
+              value: production
+            - name: API_URL
+              value: http://apigateway:5000
           resources:
             limits:
               memory: "512Mi"

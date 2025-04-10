@@ -14,9 +14,14 @@ spec:
     spec:
       containers:
         - name: apigateway
-          image: ${{ secrets.DOCKERHUB_USERNAME }}/apigateway:latest
+          image: rowanbattles/apigateway:latest
           ports:
             - containerPort: 5000
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Docker"
+            - name: ASPNETCORE_URLS
+              value: "http://+:5000"
           resources:
             limits:
               memory: "512Mi"
@@ -24,5 +29,3 @@ spec:
             requests:
               memory: "256Mi"
               cpu: "250m"
-      imagePullSecrets:
-        - name: dockerhub-secret

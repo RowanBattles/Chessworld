@@ -1,19 +1,21 @@
 import { useState, useEffect } from "react";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
-import { playerData } from "../types/PlayerType";
 
 let connection: HubConnection | null = null;
 
-const useWebSocket = (gameId: string, playerData?: playerData) => {
+const useWebSocket = (
+  gameId: string,
+  playerData?: { id: string; isSpectator: boolean }
+) => {
   const [error, setError] = useState<string | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
 
   useEffect(() => {
     if (!gameId || !playerData) return;
+    console.log("here");
 
     const endpoint = playerData.isSpectator ? "/watch" : "/play";
-
-    const url = new URL(`http://localhost:5000${endpoint}`);
+    const url = new URL(`${(import.meta as any).env.VITE_API_URL}${endpoint}`);
     url.searchParams.append("gameId", gameId);
     if (!playerData.isSpectator && playerData.id) {
       url.searchParams.append("token", playerData.id);
@@ -24,9 +26,6 @@ const useWebSocket = (gameId: string, playerData?: playerData) => {
         connection = new HubConnectionBuilder().withUrl(url.toString()).build();
 
         connection.onclose(async () => {
-          console.warn(
-            "WebSocket connection closed. Attempting to reconnect..."
-          );
           setIsReconnecting(true);
           await attemptReconnect();
         });
@@ -36,18 +35,19 @@ const useWebSocket = (gameId: string, playerData?: playerData) => {
         connection.state === "Connected" ||
         connection.state === "Connecting"
       ) {
+        console.log("not connected");
         return;
       }
 
       try {
         await connection.start();
         console.log(`Connected to SignalR at ${url}`);
-        setError(null); // Clear any previous errors
+        setError(null);
         setIsReconnecting(false);
       } catch (err) {
         setError("Failed to connect to WebSocket");
         console.error("Error connecting to SignalR:", err);
-        setTimeout(() => attemptReconnect(), 5000); // Retry after 5 seconds
+        setTimeout(() => attemptReconnect(), 5000);
       }
     };
 
@@ -55,7 +55,6 @@ const useWebSocket = (gameId: string, playerData?: playerData) => {
       if (!connection) return;
       try {
         await connection.start();
-        console.log("Reconnected to WebSocket successfully.");
         setError(null);
         setIsReconnecting(false);
       } catch (err) {
@@ -63,13 +62,14 @@ const useWebSocket = (gameId: string, playerData?: playerData) => {
           "Reconnection attempt failed. Retrying in 5 seconds...",
           err
         );
-        setTimeout(() => attemptReconnect(), 5000); // Retry after 5 seconds
+        setTimeout(() => attemptReconnect(), 5000);
       }
     };
 
     startConnection();
 
     return () => {
+      console.log("state", connection);
       if (connection && connection.state === "Connected") {
         connection
           .stop()
@@ -81,7 +81,34 @@ const useWebSocket = (gameId: string, playerData?: playerData) => {
     };
   }, [gameId, playerData]);
 
-  return { error, connection, isReconnecting };
+  const sendMove = async (move: string) => {
+    console.log("send move");
+    if (connection?.state === "Connected") {
+      try {
+        await connection.invoke("MakeMove", move);
+        console.log("Move sent:", move);
+      } catch (error) {
+        console.error("Failed to send move:", error);
+      }
+    } else {
+      console.error("WebSocket connection is not established.");
+    }
+  };
+
+  const onReceiveMove = (callback: (fen: string) => void) => {
+    console.log("receive move");
+    if (connection) {
+      connection.on("ReceiveMove", callback);
+    }
+  };
+
+  const offReceiveMove = (callback: (fen: string) => void) => {
+    if (connection) {
+      connection.off("ReceiveMove", callback);
+    }
+  };
+
+  return { error, isReconnecting, sendMove, onReceiveMove, offReceiveMove };
 };
 
 export default useWebSocket;

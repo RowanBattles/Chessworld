@@ -117,9 +117,14 @@ namespace GameService.API.Business.Services
                 gameModel.UpdateBoard(updatedFen);
 
                 _logger.LogInformation("Persisting updated FEN: {Fen} for game {GameId}", updatedFen, gameId);
-                await _gameRepository.UpdateGame(gameModel).ConfigureAwait(false);
+                bool updated = await _gameRepository.UpdateGame(gameModel).ConfigureAwait(false);
 
-                return updatedFen;
+                if (updated)
+                {
+                    return updatedFen;
+                }
+                
+                throw new Exception("Failed to update game in repository");
             }
             catch (KeyNotFoundException ex)
             {

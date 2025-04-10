@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Chessboard } from "react-chessboard";
-import { HubConnection } from "@microsoft/signalr";
+import useWebSocket from "../hooks/useWebsocket";
 
 const parseTurnFromFen = (fen: string): "white" | "black" => {
   const turnChar = fen.split(" ")[1];
@@ -11,32 +11,36 @@ const ChessBoard = ({
   color,
   isSpectator,
   fen,
-  socket,
+  gameId,
+  playerData,
 }: {
   color: "white" | "black";
   isSpectator: boolean;
   fen: string;
-  socket: HubConnection | null;
+  gameId: string;
+  playerData: { id: string; isSpectator: boolean };
 }) => {
   const [currentFen, setCurrentFen] = useState(fen);
   const [currentTurn, setCurrentTurn] = useState<"white" | "black">(
     parseTurnFromFen(fen)
   );
+  const { sendMove, onReceiveMove, offReceiveMove } = useWebSocket(
+    gameId,
+    playerData
+  );
 
   useEffect(() => {
-    if (!socket) return;
-
     const handleReceiveMove = (fen: string) => {
       setCurrentFen(fen);
       setCurrentTurn(parseTurnFromFen(fen));
     };
 
-    socket.on("ReceiveMove", handleReceiveMove);
+    onReceiveMove(handleReceiveMove);
 
     return () => {
-      socket.off("ReceiveMove", handleReceiveMove);
+      offReceiveMove(handleReceiveMove);
     };
-  }, [socket, color]);
+  }, [onReceiveMove, offReceiveMove]);
 
   const isPlayerTurn = color === currentTurn;
 
@@ -52,18 +56,7 @@ const ChessBoard = ({
     }
 
     const move = `${sourceSquare}${targetSquare}`;
-
-    if (socket?.state === "Connected") {
-      console.log("Sending move to backend:", move);
-
-      socket.invoke("MakeMove", move).catch((error) => {
-        console.error("Failed to send move to backend:", error);
-      });
-    } else {
-      console.error("WebSocket connection is not established.");
-      return false;
-    }
-
+    sendMove(move);
     return true;
   };
 

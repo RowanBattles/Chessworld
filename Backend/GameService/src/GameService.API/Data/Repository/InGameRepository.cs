@@ -29,7 +29,7 @@ namespace GameService.API.Data.Repository
             return await Task.FromResult(game?.Id ?? Guid.Empty);
         }
 
-        public async Task UpdateGame(GameModel gameModel)
+        public async Task<bool> UpdateGame(GameModel gameModel)
         {
             GameEntity? gameEntity = _activeGames.FirstOrDefault(g => g.Id == gameModel.Id);
             if (gameEntity != null)
@@ -37,12 +37,13 @@ namespace GameService.API.Data.Repository
                 _activeGames.TryTake(out gameEntity);
                 gameEntity = GameMapper.ToGameEntity(gameModel);
                 _activeGames.Add(gameEntity);
+                await Task.CompletedTask;
+                return true;
             }
             else
             {
-                throw new KeyNotFoundException("Game not found");
+                return false;
             }
-            await Task.CompletedTask;
         }
     }
 }

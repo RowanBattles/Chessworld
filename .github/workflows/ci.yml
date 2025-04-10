@@ -89,9 +89,3 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/gameservice:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/matchmakingservice:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/apigateway:latest
-
-      - name: Create Kubernetes Secret
-        run: |
-          kubectl create secret docker-registry dockerhub-secret \
-            --docker-username=${{ secrets.DOCKERHUB_USERNAME }} \
-            --docker-password=${{ secrets.DOCKERHUB_TOKEN }}
