@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matchmakingservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: matchmakingservice
+  template:
+    metadata:
+      labels:
+        app: matchmakingservice
+    spec:
+      containers:
+        - name: matchmakingservice
+          image: ${{ secrets.DOCKERHUB_USERNAME }}/matchmakingservice:latest
+          ports:
+            - containerPort: 8082
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+      imagePullSecrets:
+        - name: dockerhub-secret
