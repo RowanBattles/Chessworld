@@ -140,7 +140,9 @@ namespace GameService.Tests.Business
             var color = "white";
             var uci = "e2e4";
             var gameModel = new GameModel(gameId, "whiteToken", "blackToken");
+            var firstFen = gameModel.Fen;
             _gameRepositoryMock.Setup(repo => repo.GetGameByGameId(gameId)).ReturnsAsync(gameModel);
+            _gameRepositoryMock.Setup(repo => repo.UpdateGame(It.IsAny<GameModel>())).ReturnsAsync(true);
 
             // Act
             var result = await _gameService.MakeMove(gameId, color, uci);
@@ -148,6 +150,8 @@ namespace GameService.Tests.Business
             // Assert
             _gameRepositoryMock.Verify(repo => repo.UpdateGame(It.IsAny<GameModel>()), Times.Once);
             Assert.NotNull(result);
+            Assert.Equal(gameModel.Fen, result);
+            Assert.NotEqual(firstFen, result);
         }
 
         [Fact]

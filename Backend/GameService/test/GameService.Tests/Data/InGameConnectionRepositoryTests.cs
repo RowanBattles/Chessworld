@@ -1,13 +1,7 @@
 ﻿using GameService.API.Data.Repository;
 using GameService.API.Business.Models;
-using GameService.API.Data.Entity;
-using GameService.API.Contract.Mappers;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace GameService.Tests.Data.Repository
 {

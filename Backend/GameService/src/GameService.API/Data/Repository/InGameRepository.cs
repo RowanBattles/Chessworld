@@ -40,6 +40,11 @@ namespace GameService.API.Data.Repository
 
         public async Task<bool> UpdateGame(GameModel gameModel)
         {
+            if (!_gamesById.ContainsKey(gameModel.Id))
+            {
+                throw new KeyNotFoundException($"Game with ID {gameModel.Id} does not exist.");
+            }
+
             var entity = GameMapper.ToGameEntity(gameModel);
             _gamesById[entity.Id] = entity;
             return await Task.FromResult(true);
