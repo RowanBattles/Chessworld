@@ -40,6 +40,11 @@ const FindGameComponent: React.FC = () => {
           return;
         }
 
+        updateStatus({
+          msg: response.message,
+          err: false,
+          disabled: true,
+        });
         setTimeout(poll, 500);
       } catch {
         updateStatusError();

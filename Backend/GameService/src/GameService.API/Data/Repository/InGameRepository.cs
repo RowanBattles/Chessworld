@@ -8,42 +8,41 @@ namespace GameService.API.Data.Repository
 {
     public class InGameRepository : IGameRepository
     {
-        private readonly ConcurrentBag<GameEntity> _activeGames = [];
+        private readonly ConcurrentDictionary<Guid, GameEntity> _gamesById = new();
+        private readonly ConcurrentDictionary<string, Guid> _playerTokenToGameId = new();
 
         public async Task AddGame(GameModel gameModel)
         {
-            GameEntity gameEntity = GameMapper.ToGameEntity(gameModel);
-            _activeGames.Add(gameEntity);
+            var entity = GameMapper.ToGameEntity(gameModel);
+            _gamesById[entity.Id] = entity;
+            _playerTokenToGameId[entity.WhiteToken] = entity.Id;
+            _playerTokenToGameId[entity.BlackToken] = entity.Id;
             await Task.CompletedTask;
         }
 
         public async Task<GameModel?> GetGameByGameId(Guid gameId)
         {
-            var game = _activeGames.FirstOrDefault(g => g.Id == gameId);
-            return await Task.FromResult(game != null ? GameMapper.ToGameModel(game) : null);
+            return await Task.FromResult(
+                _gamesById.TryGetValue(gameId, out var entity)
+                    ? GameMapper.ToGameModel(entity)
+                    : null
+            );
         }
 
         public async Task<Guid> GetGameByPlayerId(string playerToken)
         {
-            var game = _activeGames.FirstOrDefault(g => g.WhiteToken == playerToken || g.BlackToken == playerToken);
-            return await Task.FromResult(game?.Id ?? Guid.Empty);
+            return await Task.FromResult(
+                _playerTokenToGameId.TryGetValue(playerToken, out var gameId)
+                    ? gameId
+                    : Guid.Empty
+            );
         }
 
         public async Task<bool> UpdateGame(GameModel gameModel)
         {
-            GameEntity? gameEntity = _activeGames.FirstOrDefault(g => g.Id == gameModel.Id);
-            if (gameEntity != null)
-            {
-                _activeGames.TryTake(out gameEntity);
-                gameEntity = GameMapper.ToGameEntity(gameModel);
-                _activeGames.Add(gameEntity);
-                await Task.CompletedTask;
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            var entity = GameMapper.ToGameEntity(gameModel);
+            _gamesById[entity.Id] = entity;
+            return await Task.FromResult(true);
         }
     }
 }

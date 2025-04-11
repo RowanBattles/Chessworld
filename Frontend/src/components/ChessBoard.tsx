@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Chessboard } from "react-chessboard";
 import useWebSocket from "../hooks/useWebsocket";
+import { playerData } from "../types/PlayerType";
 
 const parseTurnFromFen = (fen: string): "white" | "black" => {
   const turnChar = fen.split(" ")[1];
@@ -18,29 +19,24 @@ const ChessBoard = ({
   isSpectator: boolean;
   fen: string;
   gameId: string;
-  playerData: { id: string; isSpectator: boolean };
+  playerData: playerData;
 }) => {
   const [currentFen, setCurrentFen] = useState(fen);
   const [currentTurn, setCurrentTurn] = useState<"white" | "black">(
     parseTurnFromFen(fen)
   );
-  const { sendMove, onReceiveMove, offReceiveMove } = useWebSocket(
-    gameId,
-    playerData
-  );
+
+  // Call useWebSocket at the top level
+  const { sendMove, receiveMove } = useWebSocket(gameId, playerData);
+
+  const handleReceiveMove = (fen: string) => {
+    setCurrentFen(fen);
+    setCurrentTurn(parseTurnFromFen(fen));
+  };
 
   useEffect(() => {
-    const handleReceiveMove = (fen: string) => {
-      setCurrentFen(fen);
-      setCurrentTurn(parseTurnFromFen(fen));
-    };
-
-    onReceiveMove(handleReceiveMove);
-
-    return () => {
-      offReceiveMove(handleReceiveMove);
-    };
-  }, [onReceiveMove, offReceiveMove]);
+    receiveMove(handleReceiveMove);
+  }, [receiveMove]);
 
   const isPlayerTurn = color === currentTurn;
 

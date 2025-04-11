@@ -32,7 +32,8 @@ namespace GameService.API.Business.Services
         {
             try
             {
-                return await _gameRepository.GetGameByPlayerId(playerToken);
+                Guid gameId = await _gameRepository.GetGameByPlayerId(playerToken);
+                return gameId;
             }
             catch (Exception ex)
             {
