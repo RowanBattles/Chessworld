@@ -1,59 +1,74 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as signalR from "@microsoft/signalr";
 
 const useWebSocket = (
   gameId: string,
   playerData: { id: string; isSpectator: boolean }
 ) => {
-  const [connection, setConnection] = useState<signalR.HubConnection | null>(
-    null
-  );
+  const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const [connectionReady, setConnectionReady] = useState(false);
+
+  const url = useMemo(() => {
+    const endpoint = playerData.isSpectator ? "/watch" : "/play";
+    const newUrl = new URL(`${import.meta.env.VITE_API_URL}${endpoint}`);
+    newUrl.searchParams.append("gameId", gameId);
+    if (!playerData.isSpectator) {
+      newUrl.searchParams.append("token", playerData.id);
+    }
+    return newUrl;
+  }, [gameId, playerData]);
 
   useEffect(() => {
-    const connect = async () => {
-      const endpoint = playerData.isSpectator ? "/watch" : "/play";
-      const url = new URL(
-        `${(import.meta as any).env.VITE_API_URL}${endpoint}`
-      );
-      url.searchParams.append("gameId", gameId);
-      if (!playerData.isSpectator) {
-        url.searchParams.append("token", playerData.id);
-      }
+    let isMounted = true;
 
-      const newConnection = new signalR.HubConnectionBuilder()
-        .withUrl(url.toString())
-        .withAutomaticReconnect()
-        .build();
+    const newConnection = new signalR.HubConnectionBuilder()
+      .withUrl(url.toString())
+      .withAutomaticReconnect()
+      .build();
+
+    const connect = async () => {
+      const existingConn = connectionRef.current;
+
+      if (
+        existingConn &&
+        existingConn.state !== signalR.HubConnectionState.Disconnected
+      ) {
+        try {
+          await existingConn.stop();
+        } catch (stopErr) {
+          console.error("Failed to stop previous connection:", stopErr);
+        }
+      }
 
       try {
         await newConnection.start();
-        console.log("WebSocket connected.");
-        setConnection(newConnection);
-      } catch (err) {
-        console.error("WebSocket connection failed:", err);
+        if (isMounted) {
+          connectionRef.current = newConnection;
+          setConnectionReady(true);
+        }
+      } catch (startErr) {
+        console.error("WebSocket connection failed:", startErr);
+        if (isMounted) setConnectionReady(false);
       }
     };
 
     connect();
 
     return () => {
-      if (connection) {
-        connection
-          .stop()
-          .then(() => console.log("WebSocket disconnected."))
-          .catch((err) => console.error("Error disconnecting WebSocket:", err));
-      }
+      isMounted = false;
+      newConnection
+        .stop()
+        .catch((err) => console.error("Error disconnecting WebSocket:", err));
+
+      setConnectionReady(false);
     };
-  }, [gameId, playerData]);
+  }, [url]);
 
   const sendMove = async (move: string) => {
-    if (
-      connection &&
-      connection.state === signalR.HubConnectionState.Connected
-    ) {
+    const conn = connectionRef.current;
+    if (conn && conn.state === signalR.HubConnectionState.Connected) {
       try {
-        await connection.invoke("MakeMove", move);
-        console.log("Move sent:", move);
+        await conn.invoke("MakeMove", move);
       } catch (err) {
         console.error("Failed to send move:", err);
       }
@@ -63,14 +78,15 @@ const useWebSocket = (
   };
 
   const receiveMove = (callback: (fen: string) => void) => {
-    if (connection) {
-      connection.on("ReceiveMove", callback);
+    const conn = connectionRef.current;
+    if (conn) {
+      conn.on("ReceiveMove", callback);
     } else {
       console.error("WebSocket is not connected.");
     }
   };
 
-  return { sendMove, receiveMove };
+  return { sendMove, receiveMove, connectionReady };
 };
 
 export default useWebSocket;

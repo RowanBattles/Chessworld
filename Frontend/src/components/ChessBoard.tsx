@@ -26,8 +26,10 @@ const ChessBoard = ({
     parseTurnFromFen(fen)
   );
 
-  // Call useWebSocket at the top level
-  const { sendMove, receiveMove } = useWebSocket(gameId, playerData);
+  const { sendMove, receiveMove, connectionReady } = useWebSocket(
+    gameId,
+    playerData
+  );
 
   const handleReceiveMove = (fen: string) => {
     setCurrentFen(fen);
@@ -35,8 +37,10 @@ const ChessBoard = ({
   };
 
   useEffect(() => {
+    if (!connectionReady) return;
+
     receiveMove(handleReceiveMove);
-  }, [receiveMove]);
+  }, [receiveMove, connectionReady]);
 
   const isPlayerTurn = color === currentTurn;
 
