@@ -56,6 +56,7 @@ const FindGameComponent: React.FC = () => {
   const handleFindGame = async () => {
     try {
       updateStatus({ msg: "Searching for a game..." });
+      console.log(import.meta.env.VITE_API_URL);
       const response = await findGame();
 
       if (response.matchFound) {
