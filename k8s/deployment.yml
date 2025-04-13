@@ -20,8 +20,6 @@ spec:
           env:
             - name: NODE_ENV
               value: "production"
-            - name: VITE_API_URL
-              value: "http://apigateway:5000"
           resources:
             requests:
               memory: "128Mi"

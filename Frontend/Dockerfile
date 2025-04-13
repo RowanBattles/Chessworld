@@ -11,6 +11,13 @@ RUN yarn install
 # Copy the rest of the application code
 COPY . .
 
+# Inject the VITE_API_URL environment variable at build time with a default value
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
+
+# Build the application
+RUN VITE_API_URL=${VITE_API_URL} yarn build
+
 # Build the application
 RUN yarn build
 
