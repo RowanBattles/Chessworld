@@ -13,20 +13,6 @@ spec:
         app: chessworld
     spec:
       containers:
-        - name: frontend
-          image: rowanbattles/frontend:latest
-          ports:
-            - containerPort: 3000
-          env:
-            - name: NODE_ENV
-              value: "production"
-          resources:
-            requests:
-              memory: "128Mi"
-              cpu: "250m"
-            limits:
-              memory: "256Mi"
-              cpu: "500m"
         - name: apigateway
           image: rowanbattles/apigateway:latest
           ports:

@@ -8,20 +8,8 @@ spec:
   ports:
     - port: 5000
       targetPort: 5000
-  type: LoadBalancer
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend
-spec:
-  selector:
-    app: chessworld
-  ports:
-    - port: 3000
-      targetPort: 3000
-      nodePort: 30000
-  type: LoadBalancer
+      nodePort: 30500
+  type: NodePort
 ---
 apiVersion: v1
 kind: Service
