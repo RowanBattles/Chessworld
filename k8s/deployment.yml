@@ -22,11 +22,11 @@ spec:
               value: "production"
           resources:
             requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
               memory: "128Mi"
               cpu: "250m"
-            limits:
-              memory: "256Mi"
-              cpu: "500m"
         - name: apigateway
           image: rowanbattles/apigateway:latest
           ports:
@@ -42,11 +42,11 @@ spec:
               value: "matchmakingservice"
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "500m"
+              memory: "64Mi"
+              cpu: "50m"
             limits:
-              memory: "512Mi"
-              cpu: "1"
+              memory: "128Mi"
+              cpu: "250m"
         - name: gameservice
           image: rowanbattles/gameservice:latest
           ports:
@@ -58,11 +58,11 @@ spec:
               value: "http://+:8080"
           resources:
             requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
               memory: "128Mi"
               cpu: "250m"
-            limits:
-              memory: "256Mi"
-              cpu: "500m"
         - name: matchmakingservice
           image: rowanbattles/matchmakingservice:latest
           ports:
@@ -74,8 +74,8 @@ spec:
               value: "http://+:8082"
           resources:
             requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
               memory: "128Mi"
               cpu: "250m"
-            limits:
-              memory: "256Mi"
-              cpu: "500m"

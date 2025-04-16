@@ -8,7 +8,6 @@ spec:
   ports:
     - port: 5000
       targetPort: 5000
-      nodePort: 30500
   type: LoadBalancer
 ---
 apiVersion: v1
@@ -21,7 +20,6 @@ spec:
   ports:
     - port: 3000
       targetPort: 3000
-      nodePort: 30000
   type: LoadBalancer
 ---
 apiVersion: v1
