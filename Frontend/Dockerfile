@@ -1,5 +1,5 @@
 # Use a Node.js image to build and serve the frontend
-FROM node:20-alpine
+FROM node:20-alpine as build
 
 # Set the working directory
 WORKDIR /app
@@ -18,11 +18,18 @@ ENV VITE_API_URL=${VITE_API_URL}
 # Build the application
 RUN VITE_API_URL=${VITE_API_URL} yarn build
 
-# Build the application
-RUN yarn build
+
+# Stage 2: Serve the application with NGINX
+FROM nginx:alpine
+
+# Copy the built files from the previous stage
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copy the NGINX configuration file
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expose port 3000
 EXPOSE 3000
 
-# Start the application using a lightweight HTTP server
-CMD ["npx", "serve", "-s", "dist", "-l", "3000"]
+# Start NGINX
+CMD ["nginx", "-g", "daemon off;"]
