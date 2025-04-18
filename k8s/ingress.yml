@@ -1,11 +1,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: chessworld-ingress
+  name: frontend-ingress
 spec:
   rules:
-    - host: localhost
-      http:
+    - http:
         paths:
           - path: /frontend
             pathType: Prefix
@@ -14,8 +13,19 @@ spec:
                 name: frontend
                 port:
                   number: 3000
-          - path: /apigateway
-            pathType: Prefix
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: apigateway-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /apigateway(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: apigateway
