@@ -10,7 +10,7 @@
         }
       ],
       "UpstreamPathTemplate": "/matchmaking/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ]
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     },
     {
       "DownstreamPathTemplate": "/games/{everything}",
@@ -22,7 +22,7 @@
         }
       ],
       "UpstreamPathTemplate": "/games/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "OPTIONS" ],
+      "UpstreamHttpMethod": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       "UseWebSockets": true
     },
     {
@@ -35,7 +35,7 @@
         }
       ],
       "UpstreamPathTemplate": "/play/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ],
+      "UpstreamHttpMethod": ["GET", "POST", "OPTIONS"],
       "UseWebSockets": true
     },
     {
@@ -48,11 +48,11 @@
         }
       ],
       "UpstreamPathTemplate": "/watch/{everything}",
-      "UpstreamHttpMethod": [ "GET", "POST", "OPTIONS" ],
+      "UpstreamHttpMethod": ["GET", "POST", "OPTIONS"],
       "UseWebSockets": true
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://localhost:5000"
+    "BaseUrl": "http://apigateway:5000"
   }
 }
