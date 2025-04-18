@@ -4,7 +4,7 @@ metadata:
   name: apigateway
 spec:
   selector:
-    app: chessworld
+    app: apigateway
   ports:
     - port: 5000
       targetPort: 5000
@@ -16,7 +16,7 @@ metadata:
   name: frontend
 spec:
   selector:
-    app: chessworld
+    app: frontend
   ports:
     - port: 3000
       targetPort: 3000
@@ -28,7 +28,7 @@ metadata:
   name: gameservice
 spec:
   selector:
-    app: chessworld
+    app: gameservice
   ports:
     - port: 8080
       targetPort: 8080
@@ -40,7 +40,8 @@ metadata:
   name: matchmakingservice
 spec:
   selector:
-    app: chessworld
+    app: matchmakingservice
   ports:
     - port: 8082
       targetPort: 8082
+  type: ClusterIP
