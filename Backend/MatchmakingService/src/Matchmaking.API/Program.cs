@@ -18,12 +18,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Add CORS policy
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -36,28 +35,10 @@ builder.Services.AddSingleton<IMatchmakingRepository, InMemoryMatchmakingReposit
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    // Disable HTTPS redirection in development
-    app.Use(async (context, next) =>
-    {
-        context.Request.Scheme = "http";
-        await next();
-    });
-    app.UseDeveloperExceptionPage();
-}
-else if (app.Environment.IsEnvironment("Docker"))
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseDeveloperExceptionPage();
-}
-else
-{
-    app.UseHttpsRedirection();
 }
 
 app.UseRouting();

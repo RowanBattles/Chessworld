@@ -11,10 +11,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials(); // Optional: Remove this if credentials are not needed
+              .AllowCredentials();
     });
 });
 
@@ -34,18 +34,13 @@ if (File.Exists(ocelotJsonPath))
 {
     var ocelotJsonContent = File.ReadAllText(ocelotJsonPath);
 
-    // Replace placeholders with environment variable values
     var matchmakingServiceHost = Environment.GetEnvironmentVariable("MatchmakingServiceHost") ?? (env == "Docker" ? "matchmakingservice" : "localhost");
     var gameServiceHost = Environment.GetEnvironmentVariable("GameServiceHost") ?? (env == "Docker" ? "gameservice" : "localhost");
 
     ocelotJsonContent = ocelotJsonContent
         .Replace("{MatchmakingServiceHost}", matchmakingServiceHost)
         .Replace("{GameServiceHost}", gameServiceHost);
-
-    //Console.WriteLine("Contents of ocelot.json after replacements:");
-    //Console.WriteLine(ocelotJsonContent);
-
-    // Load the modified JSON content into the configuration
+n
     using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(ocelotJsonContent));
     builder.Configuration.AddJsonStream(stream);
 }
@@ -58,7 +53,7 @@ var app = builder.Build();
 
 app.UseCors("CorsPolicy");
 
-if (app.Environment.IsDevelopment() || env == "Docker")
+if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
