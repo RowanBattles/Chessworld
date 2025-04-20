@@ -23,9 +23,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
     {
-        policy.SetIsOriginAllowed(origin => 
-                origin.StartsWith("http://localhost") || 
-                origin.StartsWith("http://192.168.49.2"))
+        policy.AllowAnyOrigin()
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
