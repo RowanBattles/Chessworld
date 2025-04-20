@@ -34,13 +34,14 @@ if (File.Exists(ocelotJsonPath))
 {
     var ocelotJsonContent = File.ReadAllText(ocelotJsonPath);
 
+
     var matchmakingServiceHost = Environment.GetEnvironmentVariable("MatchmakingServiceHost") ?? (env == "Docker" ? "matchmakingservice" : "localhost");
     var gameServiceHost = Environment.GetEnvironmentVariable("GameServiceHost") ?? (env == "Docker" ? "gameservice" : "localhost");
 
     ocelotJsonContent = ocelotJsonContent
         .Replace("{MatchmakingServiceHost}", matchmakingServiceHost)
         .Replace("{GameServiceHost}", gameServiceHost);
-n
+
     using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(ocelotJsonContent));
     builder.Configuration.AddJsonStream(stream);
 }
