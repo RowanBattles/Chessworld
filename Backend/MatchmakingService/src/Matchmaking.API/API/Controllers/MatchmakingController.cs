@@ -30,7 +30,7 @@ namespace Matchmaking.API.API.Controllers
                 {
                     HttpOnly = true,
                     Secure = false,
-                    SameSite = SameSiteMode.Lax,
+                    SameSite = SameSiteMode.None,
                     Expires = DateTime.UtcNow.AddHours(2)
                 };
                 Response.Cookies.Append("playerToken", playerToken, cookieOptions);
