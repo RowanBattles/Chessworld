@@ -8,23 +8,18 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-http
 spec:
   ingressClassName: nginx
-  tls:
-    - hosts:
-        - chessworld.duckdns.org
-      secretName: tls-secret
   rules:
-    - host: chessworld.duckdns.org
-      http:
+    - http:
         paths:
           - path: /api(/|$)(.*)
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: apigateway
                 port:
                   number: 5000
           - path: /()
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: frontend
