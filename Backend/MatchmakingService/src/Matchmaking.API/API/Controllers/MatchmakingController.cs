@@ -29,7 +29,7 @@ namespace Matchmaking.API.API.Controllers
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = false,
+                    Secure = true,
                     SameSite = SameSiteMode.None,
                     Expires = DateTime.UtcNow.AddHours(2)
                 };
@@ -50,6 +50,7 @@ namespace Matchmaking.API.API.Controllers
         {
             if (!Request.Cookies.TryGetValue("playerToken", out var playerToken) || string.IsNullOrEmpty(playerToken) || playerToken.Length != 8)
             {
+                _logger.LogWarning("playerToken:", playerToken);
                 return BadRequest("Invalid or missing player token. It must be a NanoID with a size of 8.");
             }
 
