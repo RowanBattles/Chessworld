@@ -40,7 +40,7 @@ jobs:
 
       - name: Build and push frontend Docker image
         run: |
-          docker build --build-arg VITE_API_URL=https://chessworldexampledns.duckdns.org -t ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest .
+          docker build --build-arg VITE_API_URL=https://chessworldexampledns.duckdns.org/api -t ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest .
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
 
