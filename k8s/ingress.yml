@@ -1,13 +1,15 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ingress
+  name: ingress-apigateway
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    cert-manager.io/cluster-issuer: letsencrypt-http
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - chessworldexampledns.duckdns.org
+      secretName: duckdns-tls
   rules:
     - http:
         paths:
@@ -18,6 +20,20 @@ spec:
                 name: apigateway
                 port:
                   number: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-frontend
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - chessworldexampledns.duckdns.org
+      secretName: duckdns-tls
+  rules:
+    - http:
+        paths:
           - path: /
             pathType: Prefix
             backend:
