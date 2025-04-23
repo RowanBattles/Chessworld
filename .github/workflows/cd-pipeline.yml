@@ -43,15 +43,15 @@ jobs:
           echo "Checking frontend..."
           response=$(curl -s --insecure https://chessworldexampledns.duckdns.org/health)
           echo "$response"
-          echo "$response" | grep -q "healthy" || (echo "Frontend not healthy!" && exit 1)
+          echo "$response" | grep -q "Healthy" || (echo "Frontend not healthy!" && exit 1)
 
 
           echo "Checking gameservice..."
           response=$(curl -s --insecure https://chessworldexampledns.duckdns.org/api/gameservice/health)
           echo "$response"
-          echo "$response" | grep -q "healthy" || (echo "Gameservice not healthy!" && exit 1)
+          echo "$response" | grep -q "Healthy" || (echo "Gameservice not healthy!" && exit 1)
 
           echo "Checking matchmakingservice..."
           response=$(curl -s --insecure https://chessworldexampledns.duckdns.org/api/matchmakingservice/health)
           echo "$response"
-          echo "$response" | grep -q "healthy" || (echo "Matchmakingservice not healthy!" && exit 1)
+          echo "$response" | grep -q "Gealthy" || (echo "Matchmakingservice not healthy!" && exit 1)

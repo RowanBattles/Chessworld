@@ -1,6 +1,30 @@
 ﻿{
   "Routes": [
     {
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "{MatchmakingServiceHost}",
+          "Port": 8082
+        }
+      ],
+      "UpstreamPathTemplate": "/matchmaking/health",
+      "UpstreamHttpMethod": ["GET"]
+    },
+    {
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "{GameServiceHost}",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/games/health",
+      "UpstreamHttpMethod": ["GET"]
+    },
+    {
       "DownstreamPathTemplate": "/matchmaking/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
