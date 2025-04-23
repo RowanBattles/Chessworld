@@ -15,6 +15,7 @@ spec:
       containers:
         - name: matchmakingservice
           image: rowanbattles/matchmakingservice:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8082
           env:

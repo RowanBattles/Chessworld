@@ -15,6 +15,7 @@ spec:
       containers:
         - name: apigateway
           image: rowanbattles/apigateway:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
           env:
