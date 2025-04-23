@@ -54,4 +54,4 @@ jobs:
           echo "Checking matchmakingservice..."
           response=$(curl -s --insecure https://chessworldexampledns.duckdns.org/api/matchmaking/health)
           echo "$response"
-          echo "$response" | grep -q "Gealthy" || (echo "Matchmakingservice not healthy!" && exit 1)
+          echo "$response" | grep -q "Healthy" || (echo "Matchmakingservice not healthy!" && exit 1)
