@@ -1,0 +1,45 @@
+name: Continuous Deployment Pipeline
+
+on:
+  workflow_run:
+    workflows: ["Continuous Integration Pipeline"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    name: Deploy to AKS
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS Context
+        run: |
+          az aks get-credentials --resource-group chessworld-rg \
+            --name chessworld-cluster --overwrite-existing
+
+      - name: Deploy Kubernetes Resources
+        run: |
+          kubectl apply -f ./k8s
+          kubectl rollout status deployment/frontend
+          kubectl rollout status deployment/apigateway
+          kubectl rollout status deployment/gameservice
+
+      - name: Verify Deployment
+        run: |
+          kubectl get pods
+          kubectl get services
+
+      - name: Health Check
+        run: |
+          kubectl exec -it $(kubectl get pod -l app=frontend -o jsonpath="{.items[0].metadata.name}") -- curl -f http://localhost:80/health
+          kubectl exec -it $(kubectl get pod -l app=apigateway -o jsonpath="{.items[0].metadata.name}") -- curl -f http://localhost:80/health
+          kubectl exec -it $(kubectl get pod -l app=gameservice -o jsonpath="{.items[0].metadata.name}") -- curl -f http://localhost:80/health
