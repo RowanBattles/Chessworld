@@ -47,11 +47,11 @@ jobs:
 
 
           echo "Checking gameservice..."
-          response=$(curl -s --insecure https://chessworldexampledns.duckdns.org/api/gameservice/health)
+          response=$(curl -s --insecure https://chessworldexampledns.duckdns.org/api/games/health)
           echo "$response"
           echo "$response" | grep -q "Healthy" || (echo "Gameservice not healthy!" && exit 1)
 
           echo "Checking matchmakingservice..."
-          response=$(curl -s --insecure https://chessworldexampledns.duckdns.org/api/matchmakingservice/health)
+          response=$(curl -s --insecure https://chessworldexampledns.duckdns.org/api/matchmaking/health)
           echo "$response"
           echo "$response" | grep -q "Gealthy" || (echo "Matchmakingservice not healthy!" && exit 1)
