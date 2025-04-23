@@ -6,7 +6,7 @@ metadata:
 spec:
   secretName: duckdns-tls
   issuerRef:
-    name: letsencrypt-staging
+    name: letsencrypt-prod
     kind: ClusterIssuer
   commonName: chessworldexampledns.duckdns.org
   dnsNames:
