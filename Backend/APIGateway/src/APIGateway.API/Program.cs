@@ -23,6 +23,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddAuthorization();
 builder.Services.AddOcelot(builder.Configuration);
 
+builder.Services.AddHealthChecks();
+
 var basePath = AppContext.BaseDirectory;
 builder.Configuration.SetBasePath(basePath)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
@@ -67,6 +69,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthorization();
+
+app.MapHealthChecks("/health");
 
 app.UseWebSockets();
 

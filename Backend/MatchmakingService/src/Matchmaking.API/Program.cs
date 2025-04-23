@@ -18,6 +18,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddHealthChecks();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
@@ -46,5 +48,7 @@ app.UseRouting();
 app.UseCors("CorsPolicy");
 
 app.MapControllers();
+
+app.MapHealthChecks("/health");
 
 app.Run();

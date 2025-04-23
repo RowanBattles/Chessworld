@@ -40,6 +40,17 @@ jobs:
 
       - name: Health Check
         run: |
-          kubectl exec -it $(kubectl get pod -l app=frontend -o jsonpath="{.items[0].metadata.name}") -- curl -f http://localhost:80/health
-          kubectl exec -it $(kubectl get pod -l app=apigateway -o jsonpath="{.items[0].metadata.name}") -- curl -f http://localhost:80/health
-          kubectl exec -it $(kubectl get pod -l app=gameservice -o jsonpath="{.items[0].metadata.name}") -- curl -f http://localhost:80/health
+          echo "Checking frontend..."
+          response=$(curl -s --insecure https://chessworldexampledns.duckdns.org/)
+          echo "$response"
+          echo "$response" | grep -q "healthy" || (echo "Frontend not healthy!" && exit 1)
+
+          echo "Checking gameservice..."
+          response=$(curl -s --insecure https://chessworldexampledns.duckdns.org/api/gameservice/health)
+          echo "$response"
+          echo "$response" | grep -q "healthy" || (echo "Gameservice not healthy!" && exit 1)
+
+          echo "Checking matchmakingservice..."
+          response=$(curl -s --insecure https://chessworldexampledns.duckdns.org/api/matchmakingservice/health)
+          echo "$response"
+          echo "$response" | grep -q "healthy" || (echo "Matchmakingservice not healthy!" && exit 1)

@@ -9,6 +9,8 @@ builder.Logging.AddConsole();
 
 builder.Services.AddSignalR();
 
+builder.Services.AddHealthChecks();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", policy =>
@@ -45,6 +47,8 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHealthChecks("/health");
 
 app.UseWebSockets();
 
