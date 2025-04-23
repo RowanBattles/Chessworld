@@ -23,8 +23,7 @@ jobs:
 
       - name: Set AKS Context
         run: |
-          az aks get-credentials --resource-group chessworld-rg \
-            --name chessworld-cluster --overwrite-existing
+          az aks get-credentials --resource-group chessworld-rg --name chessworld-cluster --overwrite-existing
 
       - name: Deploy Kubernetes Resources
         run: |
