@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: Continuous Integration Pipeline
 
 on:
   push:
@@ -8,20 +8,21 @@ on:
 
 jobs:
   frontend:
-    name: Frontend
+    name: Frontend CI
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: Frontend
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Setup Node.js Environment
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      - name: Cache Node.js modules
+      - name: Cache Dependencies
         uses: actions/cache@v3
         with:
           path: ~/.yarn/cache
@@ -29,31 +30,32 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: yarn install
 
-      - name: Lint
+      - name: Run Linter
         run: yarn lint
 
-      - name: Build frontend
+      - name: Build Frontend
         run: yarn build
 
-      - name: Build and push frontend Docker image
+      - name: Build and Push Frontend Docker Image
         run: |
           docker build --build-arg VITE_API_URL=https://chessworldexampledns.duckdns.org/api -t ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest .
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
 
   backend:
-    name: Backend
+    name: Backend CI
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: Backend
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Install Docker Compose
@@ -62,16 +64,16 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
 
-      - name: Build backend services
+      - name: Build Backend Services
         run: docker-compose -f docker-compose.yml build
 
-      - name: Start backend services
+      - name: Start Backend Services
         run: docker-compose -f docker-compose.yml up -d
 
-      - name: Run GameService tests
+      - name: Run Backend Tests
         run: docker-compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from gameservice-tests
 
-      - name: Tear down backend services
+      - name: Tear Down Backend Services
         run: docker-compose -f docker-compose.yml down
 
       - name: Log in to Docker Hub
@@ -80,12 +82,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Tag and push backend images to Docker Hub
+      - name: Tag and Push Backend Images
         run: |
           docker tag gameservice ${{ secrets.DOCKERHUB_USERNAME }}/gameservice:latest
           docker tag matchmakingservice ${{ secrets.DOCKERHUB_USERNAME }}/matchmakingservice:latest
           docker tag apigateway ${{ secrets.DOCKERHUB_USERNAME }}/apigateway:latest
-
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/gameservice:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/matchmakingservice:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/apigateway:latest

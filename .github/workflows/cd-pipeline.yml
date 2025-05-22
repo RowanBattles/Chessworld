@@ -1,0 +1,57 @@
+name: Continuous Deployment Pipeline
+
+on:
+  workflow_run:
+    workflows: ["Continuous Integration Pipeline"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    name: Deploy to AKS
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_SECRET }}
+
+      - name: Set AKS Context
+        run: |
+          az aks get-credentials --resource-group chessworld-rg --name chessworld-cluster --overwrite-existing
+
+      - name: Deploy Kubernetes Resources
+        run: |
+          kubectl apply -f ./k8s
+          kubectl rollout status deployment/frontend-deployment
+          kubectl rollout status deployment/apigateway-deployment
+          kubectl rollout status deployment/gameservice-deployment
+          kubectl rollout status deployment/apigateway-deployment
+
+      - name: Verify Deployment
+        run: |
+          kubectl get pods
+          kubectl get services
+
+      - name: Health Check
+        run: |
+          echo "Checking frontend..."
+          response=$(curl -s --insecure https://chessworldexampledns.duckdns.org/health)
+          echo "$response"
+          echo "$response" | grep -q "Healthy" || (echo "Frontend not healthy!" && exit 1)
+
+
+          echo "Checking gameservice..."
+          response=$(curl -s --insecure https://chessworldexampledns.duckdns.org/api/games/health)
+          echo "$response"
+          echo "$response" | grep -q "Healthy" || (echo "Gameservice not healthy!" && exit 1)
+
+          echo "Checking matchmakingservice..."
+          response=$(curl -s --insecure https://chessworldexampledns.duckdns.org/api/matchmaking/health)
+          echo "$response"
+          echo "$response" | grep -q "Healthy" || (echo "Matchmakingservice not healthy!" && exit 1)
