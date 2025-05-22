@@ -143,5 +143,18 @@ namespace GameService.API.Business.Services
                 throw new InvalidOperationException("An error occurred while making the move", ex);
             }
         }
+
+        public async Task<List<GameModel>> GetAllGames()
+        {
+            try
+            {
+                return await _gameRepository.GetAllGames();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error occurred while retrieving all games");
+                throw new InvalidOperationException("An error occurred while making the move", ex);
+            }
+        }
     }
 }

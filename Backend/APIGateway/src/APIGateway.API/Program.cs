@@ -54,16 +54,12 @@ var app = builder.Build();
 
 app.UseCors("CorsPolicy");
 
-if (app.Environment.IsDevelopment())
+Console.WriteLine("Starting API Gateway...", app.Environment.EnvironmentName);
+
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.Use(async (context, next) =>
-    {
-        context.Request.Scheme = "http";
-        await next();
-    });
-    app.UseDeveloperExceptionPage();
 }
 
 app.UseAuthorization();

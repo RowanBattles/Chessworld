@@ -35,7 +35,7 @@ builder.Services.AddSingleton<IMatchmakingRepository, InMemoryMatchmakingReposit
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Docker"))
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -46,5 +46,7 @@ app.UseRouting();
 app.UseCors("CorsPolicy");
 
 app.MapControllers();
+
+app.MapHealthChecks("/health");
 
 app.Run();

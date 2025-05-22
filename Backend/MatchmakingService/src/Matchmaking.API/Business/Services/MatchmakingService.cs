@@ -23,26 +23,23 @@ namespace Matchmaking.API.Business.Services
         public async Task<(bool, string, string?)> FindAndCreateGameAsync()
         {
             string playerToken = Nanoid.Generate("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", size: 8);
-            string? opponentToken = _matchmakingRepository.GetFirstPlayerInQueue();
+            string? opponentToken = _matchmakingRepository.TryDequeuePlayer();
 
-            if (opponentToken != null)
-            {
-                try
-                {
-                    Guid gameId = await CreateGameAsync(playerToken, opponentToken);
-                    _matchmakingRepository.DequeuePlayer(opponentToken);
-                    return (true, playerToken, gameId.ToString());
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to create game.");
-                    throw;
-                }
-            }
-            else
+            if (opponentToken == null) 
             {
                 _matchmakingRepository.EnqueuePlayer(playerToken);
                 return (false, playerToken, null);
+            }
+
+            try
+            {
+                Guid gameId = await CreateGameAsync(playerToken, opponentToken);
+                return (true, playerToken, gameId.ToString());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create game.");
+                throw;
             }
         }
 

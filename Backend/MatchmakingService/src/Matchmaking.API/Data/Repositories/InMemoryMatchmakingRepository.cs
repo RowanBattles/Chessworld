@@ -35,5 +35,15 @@ namespace GameService.API.Data.Repositories
             _players.TryPeek(out string? firstPlayer);
             return firstPlayer!;
         }
+
+        public string? TryDequeuePlayer()
+        {
+            if (_players.TryDequeue(out var player))
+            {
+                return player;
+            }
+
+            return null;
+        }
     }
 }

@@ -1,0 +1,14 @@
+{
+  "scenarios": {
+    "signalr-game": {
+      "application": {
+        "path": "./SignalRGameScenario.cs",
+        "project": "./ChessCrank.csproj"
+      },
+      "load": {
+        "users": 2,
+        "duration": "00:00:30"
+      }
+    }
+  }
+}
