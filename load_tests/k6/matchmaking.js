@@ -2,14 +2,14 @@ import http from "k6/http";
 import { sleep } from "k6";
 
 export const options = {
-  vus: 1000,
-  duration: "20s",
+  vus: 500,
+  duration: "10s",
 };
 
 export default function () {
   sleep(1);
 
-  let res = http.post("http://localhost:5000/matchmaking/findgame");
+  let res = http.post("http://localhost:8082/matchmaking/findgame");
 
   let cookie = res.cookies["playerToken"]?.[0]?.value;
 

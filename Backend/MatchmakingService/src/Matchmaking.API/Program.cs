@@ -47,6 +47,4 @@ app.UseCors("CorsPolicy");
 
 app.MapControllers();
 
-app.MapHealthChecks("/health");
-
 app.Run();

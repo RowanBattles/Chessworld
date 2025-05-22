@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 async function validateGames(iterations, failedRequests) {
   let testPassed = true;
 
-  const res = await fetch("http://localhost:5000/games");
+  const res = await fetch("http://localhost:8080/games");
   const games = await res.json();
 
   const seenTokens = new Set();
