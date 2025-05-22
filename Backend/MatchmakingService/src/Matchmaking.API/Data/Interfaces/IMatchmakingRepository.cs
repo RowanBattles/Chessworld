@@ -6,5 +6,6 @@ namespace Matchmaking.API.Data.Interfaces
         void DequeuePlayer(string opponentToken);
         void EnqueuePlayer(string playerToken);
         string? GetFirstPlayerInQueue();
+        string? TryDequeuePlayer();
     }
 }

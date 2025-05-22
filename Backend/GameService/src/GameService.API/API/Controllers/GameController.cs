@@ -1,5 +1,6 @@
 ﻿using GameService.API.API.Responses;
 using GameService.API.Business.Interfaces;
+using GameService.API.Business.Models;
 using GameService.API.Contract.Mappers;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -74,6 +75,24 @@ namespace GameService.API.API.Controllers
             {
                 _logger.LogError(ex, $"Unexpected error getting game with ID {gameId}");
                 return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAllGames()
+        {
+            try
+            {
+                List<GameModel> games = await _gameService.GetAllGames();
+
+                List<GamePlayerResponse> gameResponses = [.. games.Select(game => new GamePlayerResponse(game.Id.ToString(), game.WhiteToken, game.BlackToken))];
+
+                return Ok(gameResponses);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving games");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving games");
             }
         }
     }

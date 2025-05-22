@@ -20,6 +20,15 @@ namespace GameService.API.Data.Repository
             await Task.CompletedTask;
         }
 
+        public Task<List<GameModel>> GetAllGames()
+        {
+            return Task.FromResult(
+                _gamesById.Values
+                    .Select(GameMapper.ToGameModel)
+                    .ToList()
+            );
+        }
+
         public async Task<GameModel?> GetGameByGameId(Guid gameId)
         {
             return await Task.FromResult(
