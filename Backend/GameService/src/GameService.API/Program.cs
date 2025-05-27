@@ -2,6 +2,7 @@ using GameService.API.API.Hubs;
 using GameService.API.Business.Interfaces;
 using GameService.API.Business.Services;
 using GameService.API.Data.Repository;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,18 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowCredentials();
     });
+});
+
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+    if (string.IsNullOrEmpty(redisConnectionString))
+    {
+        throw new InvalidOperationException("Redis connection string is not configured.");
+    }
+
+    var redisConfiguration = ConfigurationOptions.Parse(redisConnectionString, true);
+    return ConnectionMultiplexer.Connect(redisConfiguration);
 });
 
 builder.Services.AddSingleton<IGameService, GameService.API.Business.Services.GameService>();
