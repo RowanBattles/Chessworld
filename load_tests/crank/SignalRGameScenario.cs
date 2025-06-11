@@ -17,6 +17,7 @@ public class Program
         "b3d5", "d8d5", "e1g1", "e8g8", "c1b2", "a8d8"
     ];
 
+    private static int failureCount_Connection_Refused = 0;
     private static int failureCount_CreatingGame = 0;
     private static int failureCount_CreatingGame_StatusCode = 0;
     private static int failureCount_Connecting = 0;
@@ -29,9 +30,8 @@ public class Program
 
     public static async Task Main(string[] args)
     {
-        int numberOfGames = 2000;
+        int numberOfGames = 1;
 
-        // CPU usage tracking
         var process = Process.GetCurrentProcess();
         var cpuStart = process.TotalProcessorTime;
         var wallClock = Stopwatch.StartNew();
@@ -49,11 +49,9 @@ public class Program
         stopwatch.Stop();
         wallClock.Stop();
 
-        // CPU usage calculation
         var cpuEnd = process.TotalProcessorTime;
         double cpuUsage = (cpuEnd - cpuStart).TotalMilliseconds / (Environment.ProcessorCount * wallClock.ElapsedMilliseconds) * 100;
 
-        // Latency stats
         long minLatency = 0, maxLatency = 0, avgLatency = 0;
         lock (latencyLock)
         {
@@ -69,6 +67,7 @@ public class Program
         Console.WriteLine($"CPU usage: {cpuUsage:F2}%");
         Console.WriteLine($"Move latency (ms): min={minLatency}, avg={avgLatency}, max={maxLatency}");
         Console.WriteLine($"Total successes: {successCount}");
+        Console.WriteLine($"Total failures Creating game (Connection refused): {failureCount_Connection_Refused}");
         Console.WriteLine($"Total failures Creating game: {failureCount_CreatingGame}");
         Console.WriteLine($"Total failures Creating game status code: {failureCount_CreatingGame_StatusCode}");
         Console.WriteLine($"Total failures Connecting: {failureCount_Connecting}");
@@ -79,7 +78,6 @@ public class Program
     {
         var whiteToken = Nanoid.Generate("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", size: 8);
         var blackToken = Nanoid.Generate("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ", size: 8);
-        var stopwatch = new Stopwatch();
         string url = $"http://localhost:8080/games/create?whiteToken={whiteToken}&blackToken={blackToken}";
 
         using var httpClient = new HttpClient();
@@ -91,7 +89,14 @@ public class Program
         catch (Exception ex)
         {
             Console.WriteLine($"[Game {gameNumber}] Exception during game creation: {ex.Message}");
-            RegisterFailure("CreatingGame");
+            if (ex.Message.Contains("de doelcomputer de verbinding actief heeft geweigerd", StringComparison.OrdinalIgnoreCase))
+            {
+                RegisterFailure("CreatingGame_ConnectionRefused");
+            }
+            else
+            {
+                RegisterFailure("CreatingGame");
+            }
             return;
         }
 
@@ -110,12 +115,16 @@ public class Program
             .WithUrl($"http://localhost:8080/play?gameId={gameId}&token={blackToken}")
             .Build();
 
+        TaskCompletionSource<string>? moveErrorTcs = null;
+
         whiteConn.On<string>("Error", msg =>
         {
+            moveErrorTcs?.TrySetResult(msg);
             Console.WriteLine($"[Game {gameNumber}] White error: {msg}");
         });
         blackConn.On<string>("Error", msg =>
         {
+            moveErrorTcs?.TrySetResult(msg);
             Console.WriteLine($"[Game {gameNumber}] Black error: {msg}");
         });
 
@@ -136,15 +145,31 @@ public class Program
             string move = moves[i];
             var conn = i % 2 == 0 ? whiteConn : blackConn;
 
+            moveErrorTcs = new TaskCompletionSource<string>();
+
             var moveStopwatch = Stopwatch.StartNew();
             try
             {
                 await conn.InvokeAsync("MakeMove", move);
+
+                // Wait briefly to see if an error is reported
+                var completedTask = await Task.WhenAny(moveErrorTcs.Task, Task.Delay(500));
+                if (completedTask == moveErrorTcs.Task)
+                {
+                    // Error received, stop the game and mark as move failure
+                    Console.WriteLine($"[Game {gameNumber}] Move {i + 1} failed: {moveErrorTcs.Task.Result}");
+                    RegisterFailure("MakingMove");
+                    await whiteConn.DisposeAsync();
+                    await blackConn.DisposeAsync();
+                    return;
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[Game {gameNumber}] Move {i + 1} failed: {ex.Message}");
                 RegisterFailure("MakingMove");
+                await whiteConn.DisposeAsync();
+                await blackConn.DisposeAsync();
                 return;
             }
             moveStopwatch.Stop();
@@ -159,7 +184,6 @@ public class Program
         await blackConn.DisposeAsync();
 
         Console.WriteLine($"[Game {gameNumber}] Complete.");
-
         RegisterSuccess();
     }
 
@@ -168,6 +192,7 @@ public class Program
         lock (lockObj)
         {
             if (failure == "CreatingGame") failureCount_CreatingGame++;
+            else if (failure == "CreatingGame_ConnectionRefused") failureCount_Connection_Refused++;
             else if (failure == "Connecting") failureCount_Connecting++;
             else if (failure == "MakingMove") failureCount_MakingMove++;
             else if (failure == "CreatingGame_StatusCode") failureCount_CreatingGame_StatusCode++;

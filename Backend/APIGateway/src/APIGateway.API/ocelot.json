@@ -74,6 +74,18 @@
       "UpstreamPathTemplate": "/watch/{everything}",
       "UpstreamHttpMethod": ["GET", "POST", "OPTIONS"],
       "UseWebSockets": true
+    },
+    {
+      "DownstreamPathTemplate": "/api/user/confirm/{token}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "{AuthServiceHost}",
+          "Port": 8084
+        }
+      ],
+      "UpstreamPathTemplate": "/auth/confirm/{token}",
+      "UpstreamHttpMethod": ["GET"]
     }
   ],
   "GlobalConfiguration": {

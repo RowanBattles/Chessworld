@@ -6,7 +6,10 @@ using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Error);
+
 
 builder.Services.AddSignalR();
 
@@ -34,6 +37,21 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     var redisConfiguration = ConfigurationOptions.Parse(redisConnectionString, true);
     return ConnectionMultiplexer.Connect(redisConfiguration);
 });
+
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxConcurrentConnections = 20000; // Increase if needed
+    serverOptions.Limits.MaxConcurrentUpgradedConnections = 20000;
+    serverOptions.Limits.MaxRequestBufferSize = 1048576; // 1MB, adjust as needed
+    serverOptions.Limits.MaxRequestLineSize = 8192; // 8KB, adjust as needed
+    serverOptions.Limits.MaxRequestHeadersTotalSize = 32768; // 32KB, adjust as needed
+    serverOptions.ListenAnyIP(8080); // Explicitly bind to 8080 if not already
+});
+
+builder.Services.AddHealthChecks()
+    .AddRedis(builder.Configuration.GetConnectionString("Redis") ?? throw new InvalidOperationException("Redis connection string is not configured."), name: "redis");
+
+
 
 builder.Services.AddSingleton<IGameService, GameService.API.Business.Services.GameService>();
 builder.Services.AddSingleton<IGameRepository, InGameRepository>();

@@ -1,58 +1,67 @@
-﻿using System.Collections.Concurrent;
-using GameService.API.Business.Interfaces;
+﻿using GameService.API.Business.Interfaces;
 using GameService.API.Business.Models;
 using GameService.API.Contract.Mappers;
 using GameService.API.Data.Entity;
+using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
+using System.Text.Json;
+using NReJSON;
 
 namespace GameService.API.Data.Repository
 {
     public class InGameConnectionRepository : IGameConnectionRepository
     {
-        private readonly ConcurrentDictionary<Guid, GameConnectionEntity> _activeConnections = new();
-        private readonly ILogger<InGameConnectionRepository> _logger;
+        private readonly IDatabase _redisDb;
 
-        public InGameConnectionRepository(ILogger<InGameConnectionRepository> logger)
+        public InGameConnectionRepository(IConnectionMultiplexer connectionMultiplexer, ILogger<InGameConnectionRepository> logger)
         {
-            _logger = logger;
+            _redisDb = connectionMultiplexer.GetDatabase();
         }
 
         public async Task<GameConnectionModel?> GetGameConnectionAsync(Guid gameId)
         {
-            if (_activeConnections.TryGetValue(gameId, out var gameConnection))
-            {
-                return await Task.FromResult(GameConnectionMapper.ToModel(gameConnection));
-            }
-            return await Task.FromResult<GameConnectionModel?>(null);
+            var redisResult = await _redisDb.ExecuteAsync("JSON.GET", $"gameconnection:{gameId}");
+            if (redisResult.IsNull) return null;
+            var entity = JsonSerializer.Deserialize<GameConnectionEntity>(redisResult.ToString());
+            return entity != null ? GameConnectionMapper.ToModel(entity) : null;
         }
 
-        public async Task AddGameConnectionAsync(GameConnectionModel gameConnectionModel)
+        public async Task UpsertGameConnectionAsync(GameConnectionModel gameConnectionModel)
         {
             var entity = GameConnectionMapper.ToEntity(gameConnectionModel);
-            if (!_activeConnections.TryAdd(entity.GameId, entity))
+            var key = $"gameconnection:{entity.GameId}";
+            var json = JsonSerializer.Serialize(entity);
+
+            // Store the game connection
+            await _redisDb.ExecuteAsync("JSON.SET", key, "$", json);
+
+            // Index each connectionId to the gameId
+            if (!string.IsNullOrWhiteSpace(entity.ConnectionWhite))
+                await _redisDb.StringSetAsync($"connection:{entity.ConnectionWhite}", entity.GameId.ToString());
+            if (!string.IsNullOrWhiteSpace(entity.ConnectionBlack))
+                await _redisDb.StringSetAsync($"connection:{entity.ConnectionBlack}", entity.GameId.ToString());
+            if (entity.ConnectionSpectators != null)
             {
-                _logger.LogWarning("Game connection already exists for gameId: {GameId}", entity.GameId);
-                throw new InvalidOperationException("Game connection already exists.");
+                foreach (var spectatorId in entity.ConnectionSpectators)
+                {
+                    if (!string.IsNullOrWhiteSpace(spectatorId))
+                        await _redisDb.StringSetAsync($"connection:{spectatorId}", entity.GameId.ToString());
+                }
             }
-            await Task.CompletedTask;
         }
 
-        public async Task UpdateGameConnectionAsync(GameConnectionModel gameConnectionModel)
-        {
-            var entity = GameConnectionMapper.ToEntity(gameConnectionModel);
-            _activeConnections[entity.GameId] = entity;
-            await Task.CompletedTask;
-        }
 
         public async Task<Guid> GetGameConnectionByConnectionIdAsync(string connectionId)
         {
-            foreach (var gameConnection in _activeConnections.Values)
-            {
-                if (gameConnection.ConnectionWhite == connectionId || gameConnection.ConnectionBlack == connectionId || gameConnection.ConnectionSpectators.Contains(connectionId))
-                {
-                    return await Task.FromResult(gameConnection.GameId);
-                }
-            }
-            return await Task.FromResult(Guid.Empty);
+            var gameIdString = await _redisDb.StringGetAsync($"connection:{connectionId}");
+            if (gameIdString.IsNullOrEmpty)
+                return Guid.Empty;
+
+            if (Guid.TryParse(gameIdString, out var gameId))
+                return gameId;
+
+            return Guid.Empty;
         }
+
     }
 }

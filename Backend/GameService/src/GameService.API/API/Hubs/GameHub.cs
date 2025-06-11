@@ -1,9 +1,6 @@
-﻿using ChessDotNet;
-using GameService.API.API.Responses;
+﻿using GameService.API.API.Responses;
 using GameService.API.Business.Interfaces;
-using GameService.API.Business.Services;
-using GameService.API.Contract.Mappers;
-using Microsoft.AspNetCore.Mvc;
+
 using Microsoft.AspNetCore.SignalR;
 
 namespace GameService.API.API.Hubs
@@ -27,6 +24,7 @@ namespace GameService.API.API.Hubs
             string connectionId = Context.ConnectionId;
             if (httpContext == null || string.IsNullOrEmpty(connectionId))
             {
+                _logger.LogWarning("OnConnectedAsync aborted: Missing HttpContext or connection ID.");
                 Context.Abort();
                 return;
             }
@@ -37,6 +35,7 @@ namespace GameService.API.API.Hubs
 
             if (string.IsNullOrEmpty(gameId) || !Guid.TryParse(gameId, out Guid gameGuid))
             {
+                _logger.LogWarning("OnConnectedAsync aborted: Invalid or missing gameId.");
                 Context.Abort();
                 return;
             }
@@ -53,6 +52,7 @@ namespace GameService.API.API.Hubs
                 {
                     if (string.IsNullOrEmpty(token) || validToken != token)
                     {
+                        _logger.LogWarning("OnConnectedAsync aborted: Invalid or missing token for game {GameId}.", gameId);
                         Context.Abort();
                         return;
                     }
@@ -65,6 +65,7 @@ namespace GameService.API.API.Hubs
                 }
                 else
                 {
+                    _logger.LogWarning("OnConnectedAsync aborted: Invalid path {Path} for connection {ConnectionId}.", path, connectionId);
                     Context.Abort();
                     return;
                 }
@@ -118,7 +119,7 @@ namespace GameService.API.API.Hubs
             }
             catch (ArgumentException ex)
             {
-                _logger.LogWarning(ex, "Validation failed for UCI move {Uci}.", uci);
+                _logger.LogError(ex, "Validation failed for UCI move {Uci}.", uci);
                 await Clients.Caller.SendAsync("Error", ex.Message);
             }
             catch (KeyNotFoundException ex)

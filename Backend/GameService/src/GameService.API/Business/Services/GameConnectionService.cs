@@ -20,18 +20,11 @@ namespace GameService.API.Business.Services
             {
                 GameConnectionModel? gameConnection = await GetGameConnectionAsync(gameId);
 
-                if (gameConnection != null)
-                {
-                    gameConnection.AddConnection(connectionId, color);
-                    await _repository.UpdateGameConnectionAsync(gameConnection);
-                    return gameConnection.StatusResponse();
-                }
+                gameConnection ??= new GameConnectionModel(gameId);
 
-                var newConnection = new GameConnectionModel(gameId);
-                newConnection.AddConnection(connectionId, color);
-                await _repository.AddGameConnectionAsync(newConnection);
-                return newConnection.StatusResponse();
-
+                gameConnection.AddConnection(connectionId, color);
+                await _repository.UpsertGameConnectionAsync(gameConnection);
+                return gameConnection.StatusResponse();
             }
             catch (Exception ex)
             {
@@ -40,15 +33,10 @@ namespace GameService.API.Business.Services
             }
         }
 
+
         public async Task<string?> GetColorByConnectionId(Guid gameId, string connectionId)
         {
-            GameConnectionModel? gameConnection = await GetGameConnectionAsync(gameId);
-
-            if (gameConnection == null)
-            {
-                throw new Exception("Game connection not found");
-            }
-
+            GameConnectionModel? gameConnection = await GetGameConnectionAsync(gameId) ?? throw new Exception("Game connection not found");
             string? color = gameConnection.GetColorByConnectionId(connectionId);
             return color;
         }

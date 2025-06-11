@@ -5,6 +5,7 @@ using GameService.API.Business.Models;
 using StackExchange.Redis;
 using System.Text.Json;
 using NReJSON;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 
 namespace GameService.API.Data.Repository
 {
@@ -21,18 +22,34 @@ namespace GameService.API.Data.Repository
         {
             var entity = GameMapper.ToGameEntity(gameModel);
             var json = JsonSerializer.Serialize(entity);
-            await _redisDb.ExecuteAsync("JSON.SET", $"game:{entity.Id}", "$", json);
+
+            var batch = _redisDb.CreateBatch();
+            var tasks = new List<Task>
+           {
+               batch.ExecuteAsync("JSON.SET", $"game:{entity.Id}", "$", json)
+           };
+
+            if (!string.IsNullOrWhiteSpace(entity.WhiteToken))
+                tasks.Add(batch.StringSetAsync($"player:{entity.WhiteToken}", entity.Id.ToString()));
+            if (!string.IsNullOrWhiteSpace(entity.BlackToken))
+                tasks.Add(batch.StringSetAsync($"player:{entity.BlackToken}", entity.Id.ToString()));
+
+            batch.Execute(); 
+            await Task.WhenAll(tasks);
         }
 
         public async Task<List<GameModel>> GetAllGames()
         {
             var server = _redisDb.Multiplexer.GetServer(_redisDb.Multiplexer.GetEndPoints()[0]);
-            var keys = server.Keys(pattern: "game:*");
+            var keys = server.Keys(pattern: "game:*").ToList();
             var games = new List<GameModel>();
 
-            foreach (var key in keys)
+            // Start all fetches in parallel
+            var tasks = keys.Select(key => _redisDb.JsonGetAsync(key)).ToArray();
+            var results = await Task.WhenAll(tasks);
+
+            foreach (var json in results)
             {
-                var json = await _redisDb.JsonGetAsync(key);
                 if (!json.IsNull)
                 {
                     var entity = JsonSerializer.Deserialize<GameEntity>(json!.ToString());
@@ -43,48 +60,64 @@ namespace GameService.API.Data.Repository
             return games;
         }
 
+
         public async Task<GameModel?> GetGameByGameId(Guid gameId)
         {
-            var json = await _redisDb.JsonGetAsync($"game:{gameId}");
-            if (json.IsNull) return null;
-            var entity = JsonSerializer.Deserialize<GameEntity>(json!.ToString());
-            return GameMapper.ToGameModel(entity!);
+            var redisKey = $"game:{gameId}";
+            var json = await _redisDb.JsonGetAsync(redisKey);
+
+            if (json.IsNull)
+                return null;
+
+            var jsonString = json.ToString();
+
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            var entity = jsonString.TrimStart().StartsWith("[")
+                ? JsonSerializer.Deserialize<List<GameEntity>>(jsonString, options)?.FirstOrDefault()
+                : JsonSerializer.Deserialize<GameEntity>(jsonString, options);
+
+            return entity != null ? GameMapper.ToGameModel(entity) : null;
         }
+
 
         public async Task<Guid> GetGameByPlayerId(string playerToken)
         {
             if (string.IsNullOrWhiteSpace(playerToken))
                 return Guid.Empty;
 
-            var server = _redisDb.Multiplexer.GetServer(_redisDb.Multiplexer.GetEndPoints()[0]);
+            var gameIdString = await _redisDb.StringGetAsync($"player:{playerToken}");
+            if (gameIdString.IsNullOrEmpty)
+                return Guid.Empty;
 
-            var gameKeys = server.Keys(pattern: "game:*");
-
-            foreach (var key in gameKeys)
-            {
-                var json = await _redisDb.ExecuteAsync("JSON.GET", key);
-                if (json.IsNull) continue;
-
-                var game = JsonSerializer.Deserialize<GameEntity>(json.ToString());
-
-                if (game is null) continue;
-
-                if (game.WhiteToken == playerToken || game.BlackToken == playerToken)
-                    return game.Id;
-            }
+            if (Guid.TryParse(gameIdString, out var gameId))
+                return gameId;
 
             return Guid.Empty;
         }
 
-        public async Task<bool> UpdateGame(GameModel gameModel)
+        public async Task UpdateGame(GameModel gameModel)
         {
             var entity = GameMapper.ToGameEntity(gameModel);
-            var exists = await _redisDb.KeyExistsAsync($"game:{entity.Id}");
+            var key = $"game:{entity.Id}";
+            var exists = await _redisDb.KeyExistsAsync(key);
             if (!exists)
                 throw new KeyNotFoundException($"Game with ID {gameModel.Id} does not exist.");
             var json = JsonSerializer.Serialize(entity);
-            await _redisDb.JsonSetAsync($"game:{entity.Id}", "$", json);
-            return true;
+
+            var batch = _redisDb.CreateBatch();
+            var tasks = new List<Task>
+            {
+                batch.ExecuteAsync("JSON.SET", key, "$", json)
+            };
+            if (!string.IsNullOrWhiteSpace(entity.WhiteToken))
+                tasks.Add(batch.StringSetAsync($"player:{entity.WhiteToken}", entity.Id.ToString()));
+            if (!string.IsNullOrWhiteSpace(entity.BlackToken))
+                tasks.Add(batch.StringSetAsync($"player:{entity.BlackToken}", entity.Id.ToString()));
+
+            batch.Execute();
+            await Task.WhenAll(tasks);
         }
+
     }
 }

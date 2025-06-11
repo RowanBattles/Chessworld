@@ -12,7 +12,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=http://+:8080
-
+      - REDIS_HOST=redis:6379
+      - ConnectionStrings__Redis=redis:6379
     networks:
       - chess-network
 
@@ -29,6 +30,7 @@ services:
       - ASPNETCORE_URLS=http://+:5000
       - GAMESERVICE_HOST=gameservice
       - MATCHMAKINGSERVICE_HOST=matchmakingservice
+      - REDIS_HOST=redis:6379
     depends_on:
       - gameservice
       - matchmakingservice
@@ -48,6 +50,22 @@ services:
       - ASPNETCORE_URLS=http://+:8082
     networks:
       - chess-network
+
+  redis:
+    container_name: redis
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - chess-network
+
+  mongo:
+    image: mongo:latest
+    container_name: auth-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: authdb
 
   gameservice-tests:
     container_name: gameservice-tests

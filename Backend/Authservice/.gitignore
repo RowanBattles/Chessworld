@@ -1,0 +1,4 @@
+.vs
+/src/Authservice.API/obj/
+/src/Authservice.API/bin/
+/src/Authservice.API/appsettings*

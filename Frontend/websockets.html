@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SignalR WebSocket Client</title>
+    <style>
+      body {
+        font-family: Arial;
+        padding: 20px;
+      }
+      #log {
+        white-space: pre-wrap;
+        background: #f0f0f0;
+        padding: 10px;
+        border-radius: 5px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+  </head>
+  <body>
+    <h1>SignalR WebSocket Client</h1>
+    <label>
+      Server URL:
+      <input
+        type="text"
+        id="wsUrl"
+        value="http://localhost:8080/play?gameId=557c70a8-28da-4583-bbf0-053a3abb1cf3&token=a"
+        size="40"
+      /> </label
+    ><br /><br />
+
+    <button onclick="connect()">Connect</button>
+    <button onclick="disconnect()">Disconnect</button><br /><br />
+
+    <input type="text" id="message" placeholder="Type a message" />
+    <button onclick="sendMessage()">Send</button>
+
+    <h3>Logs:</h3>
+    <div id="log"></div>
+
+    <script>
+      let connection;
+
+      function log(message) {
+        const logDiv = document.getElementById("log");
+        logDiv.textContent += message + "\n";
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
+
+      function connect() {
+        const url = document.getElementById("wsUrl").value;
+
+        connection = new signalR.HubConnectionBuilder()
+          .withUrl(url)
+          .configureLogging(signalR.LogLevel.Information)
+          .build();
+
+        connection.on("ConnectionStatus", (data) => {
+          log("📩 ConnectionStatus: " + JSON.stringify(data));
+        });
+
+        connection
+          .start()
+          .then(() => log("✅ Connected to SignalR Hub"))
+          .catch((err) => log("❌ Connection error: " + err.toString()));
+      }
+
+      function disconnect() {
+        if (connection) {
+          connection.stop();
+          log("🔌 Disconnected");
+        }
+      }
+
+      function sendMessage() {
+        const message = document.getElementById("message").value;
+        if (
+          connection &&
+          connection.state === signalR.HubConnectionState.Connected
+        ) {
+          connection
+            .invoke("SendMessage", message) // replace with your actual method
+            .then(() => log("📤 Sent: " + message))
+            .catch((err) => log("❌ Send error: " + err.toString()));
+        } else {
+          log("⚠️ Not connected");
+        }
+      }
+    </script>
+  </body>
+</html>
