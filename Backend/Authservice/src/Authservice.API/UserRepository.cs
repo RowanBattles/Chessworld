@@ -35,5 +35,20 @@ namespace Authservice.API
         {
             await _users.ReplaceOneAsync(u => u.Id == user.Id, user);
         }
+
+        public async Task DeleteExpiredUnverifiedUsersAsync()
+        {
+            var filter = Builders<UserModel>.Filter.And(
+                Builders<UserModel>.Filter.Eq(u => u.EmailVerified, false),
+                Builders<UserModel>.Filter.Lt(u => u.VerificationTokenExpiry, DateTime.UtcNow)
+            );
+            await _users.DeleteManyAsync(filter);
+        }
+
+        public async Task DeleteUser(string email)
+        {
+            var filter = Builders<UserModel>.Filter.Eq(u => u.Email, email);
+            await _users.DeleteOneAsync(filter);
+        }
     }
 }

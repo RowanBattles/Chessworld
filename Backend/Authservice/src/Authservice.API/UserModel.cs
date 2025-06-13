@@ -6,7 +6,7 @@ namespace Authservice.API
     {
         [BsonId]
         [BsonRepresentation(MongoDB.Bson.BsonType.ObjectId)]
-        public string? Id { get; set; }
+        public string Id { get; set; } = string.Empty; 
         public string UserName { get; set; }
         public string Password { get; set; }
         public string Email { get; set; }
@@ -14,13 +14,8 @@ namespace Authservice.API
         public string VerificationToken { get; set; }
         public DateTime? VerificationTokenExpiry { get; set; }
 
-        public UserModel(string userName, string password, string email)
-        {
-            UserName = userName;
-            Password = password;
-            Email = email;
-            VerificationToken = Guid.NewGuid().ToString();
-            VerificationTokenExpiry = DateTime.UtcNow.AddDays(1);
-        }
+        public UserModel(string userName, string password, string email) =>
+            (UserName, Password, Email, VerificationToken, VerificationTokenExpiry) =
+            (userName, password, email, Guid.NewGuid().ToString(), DateTime.UtcNow.AddMinutes(15));
     }
 }

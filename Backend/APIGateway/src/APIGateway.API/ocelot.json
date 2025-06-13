@@ -76,7 +76,7 @@
       "UseWebSockets": true
     },
     {
-      "DownstreamPathTemplate": "/api/user/confirm/{token}",
+      "DownstreamPathTemplate": "/auth/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -84,8 +84,20 @@
           "Port": 8084
         }
       ],
-      "UpstreamPathTemplate": "/auth/confirm/{token}",
-      "UpstreamHttpMethod": ["GET"]
+      "UpstreamPathTemplate": "/auth/{everything}",
+      "UpstreamHttpMethod": ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"]
+    },
+    {
+      "DownstreamPathTemplate": "/user",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "{AuthServiceHost}",
+          "Port": 8084
+        }
+      ],
+      "UpstreamPathTemplate": "/user",
+      "UpstreamHttpMethod": ["DELETE"]
     }
   ],
   "GlobalConfiguration": {

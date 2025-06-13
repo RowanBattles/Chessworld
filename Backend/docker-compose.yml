@@ -29,6 +29,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=http://+:5000
       - GAMESERVICE_HOST=gameservice
+      - AUTHSERVICE_HOST=authservice
       - MATCHMAKINGSERVICE_HOST=matchmakingservice
       - REDIS_HOST=redis:6379
     depends_on:
@@ -66,6 +67,28 @@ services:
       - "27017:27017"
     environment:
       MONGO_INITDB_DATABASE: authdb
+    networks:
+      - chess-network
+
+  authservice:
+    container_name: authservice
+    image: authservice:latest
+    build:
+      context: ./Authservice
+      dockerfile: Dockerfile
+    ports:
+      - "8084:8084"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:8084
+      - ConnectionString=mongodb://mongo:27017/authdb
+      - EMAIL_VERIFICATION_BASE_URL=http://localhost:3000/verify
+    env_file:
+      - ./Authservice/src/Authservice.API/.env
+    depends_on:
+      - mongo
+    networks:
+      - chess-network
 
   gameservice-tests:
     container_name: gameservice-tests

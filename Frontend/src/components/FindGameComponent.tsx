@@ -83,7 +83,7 @@ const FindGameComponent: React.FC = () => {
             : "bg-blue-500 hover:bg-blue-600"
         }`}
       >
-        Find Game
+        Search
       </button>
       <p
         className={`mt-4 min-h-[1.5rem] ${

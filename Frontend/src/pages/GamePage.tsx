@@ -62,17 +62,19 @@ const GamePage = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-2/5 bg-white p-4 rounded-lg shadow-md">
-        <ChessBoard
-          color={gameData.player.color}
-          isSpectator={gameData.player.isSpectator}
-          fen={gameData.game.fen}
-          gameId={gameData.game.gameId}
-          playerData={gameData.player}
-        />
+    <>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <div className="w-2/5 bg-white p-4 rounded-lg shadow-md">
+          <ChessBoard
+            color={gameData.player.color}
+            isSpectator={gameData.player.isSpectator}
+            fen={gameData.game.fen}
+            gameId={gameData.game.gameId}
+            playerData={gameData.player}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
