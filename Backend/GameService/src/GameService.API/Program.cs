@@ -63,6 +63,7 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHostedService<RedisGameMoveListener>();
 
 var app = builder.Build();
 
@@ -86,5 +87,18 @@ app.UseWebSockets();
 
 app.MapHub<GameHub>("/play");
 app.MapHub<GameHub>("/watch");
+
+var redis = app.Services.GetRequiredService<IConnectionMultiplexer>();
+try
+{
+    var db = redis.GetDatabase();
+    var pong = await db.PingAsync();
+    Console.WriteLine($"Redis is running. Ping: {pong.TotalMilliseconds} ms");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Redis connection failed: {ex.Message}");
+    throw;
+}
 
 app.Run();

@@ -22,6 +22,7 @@ public class RedisGameMoveListener : IHostedService
         subscriber.Subscribe(RedisChannel.Pattern("game:*"), async (channel, message) =>
         {
             var gameId = channel.ToString().Split(':')[1];
+            Console.WriteLine($"[RedisGameMoveListener] Broadcasting move for game {gameId}: {message}");
             await _hubContext.Clients.Group(gameId).SendAsync("ReceiveMove", message.ToString());
         });
         return Task.CompletedTask;

@@ -37,6 +37,7 @@ const ChessBoard = ({
   };
 
   useEffect(() => {
+    console.log("recieved move");
     if (!connectionReady) return;
 
     receiveMove(handleReceiveMove);
