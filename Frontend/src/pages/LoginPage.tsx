@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../components/useAuth";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -18,7 +18,9 @@ const LoginPage: React.FC = () => {
     try {
       await login(email, password);
     } catch (err) {
-      setError("Invalid email or password.");
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred"
+      );
     } finally {
       setLoading(false);
     }

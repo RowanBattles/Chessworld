@@ -15,9 +15,9 @@ const VerifyPage: React.FC = () => {
         setStatus(res.status);
         setMessage(res.data);
       })
-      .catch((err: any) => {
+      .catch((err: { response?: { status?: number; data?: string } }) => {
         setStatus(err.response?.status || 400);
-        setMessage(err.response?.data);
+        setMessage(err.response?.data || "Verification failed.");
       });
   }, [token]);
 

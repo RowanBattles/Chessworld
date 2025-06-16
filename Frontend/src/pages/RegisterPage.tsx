@@ -17,17 +17,10 @@ const RegisterPage: React.FC = () => {
     try {
       await register(username, email, password);
       navigate("/check-your-mail");
-    } catch (err: any) {
-      if (err.response && err.response.data) {
-        setError(
-          typeof err.response.data === "string"
-            ? err.response.data
-            : err.response.data.message ||
-                "Registration failed. Please try again."
-        );
-      } else {
-        setError("Registration failed. Please try again.");
-      }
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred"
+      );
     } finally {
       setLoading(false);
     }

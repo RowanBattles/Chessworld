@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../components/useAuth";
 
 const ProfilePage: React.FC = () => {
   const { user, logout, deleteAccount } = useAuth();
@@ -13,7 +13,7 @@ const ProfilePage: React.FC = () => {
     if (!user) {
       navigate("/register");
     }
-  }, []);
+  }, [user, navigate]);
 
   const handleLogout = async () => {
     await logout();
@@ -34,7 +34,9 @@ const ProfilePage: React.FC = () => {
       await deleteAccount();
       setShowModal(false);
     } catch (err) {
-      setDeleteError("Failed to delete account.");
+      setDeleteError(
+        err instanceof Error ? err.message : "An unexpected error occurred"
+      );
     }
   };
 
