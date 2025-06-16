@@ -68,7 +68,7 @@ const useWebSocket = (
     const conn = connectionRef.current;
     if (conn && conn.state === signalR.HubConnectionState.Connected) {
       try {
-        await conn.invoke("MakeMove", move);
+        await conn.invoke("MakeMove", gameId, move);
       } catch (err) {
         console.error("Failed to send move:", err);
       }

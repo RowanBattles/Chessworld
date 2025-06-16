@@ -7,5 +7,7 @@ namespace GameService.API.Business.Interfaces
         Task<GameConnectionModel?> GetGameConnectionAsync(Guid gameId);
         Task<Guid> GetGameConnectionByConnectionIdAsync(string connectionId);
         Task UpsertGameConnectionAsync(GameConnectionModel gameConnectionModel);
+        Task AddConnectionAsync(string connectionId, string gameId, string? color);
+        Task RemoveConnectionAsync(string connectionId, string gameId);
     }
 }

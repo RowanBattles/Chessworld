@@ -57,6 +57,7 @@ builder.Services.AddSingleton<IGameService, GameService.API.Business.Services.Ga
 builder.Services.AddSingleton<IGameRepository, InGameRepository>();
 builder.Services.AddSingleton<IGameConnectionRepository, InGameConnectionRepository>();
 builder.Services.AddSingleton<IGameConnectionService, GameConnectionService>();
+builder.Services.AddScoped<InGameConnectionRepository>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

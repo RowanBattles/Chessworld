@@ -3,9 +3,9 @@
     public class GameConnectionModel
     {
         public Guid GameId { get; private set; }
-        public string? ConnectionWhite { get; private set; }
-        public string? ConnectionBlack { get; private set; }
-        public List<string> ConnectionSpectators { get; private set; }
+        public string? ConnectionWhite { get; set; }
+        public string? ConnectionBlack { get; set; }
+        public List<string> ConnectionSpectators { get; set; }
 
         public GameConnectionModel(Guid gameId)
         {

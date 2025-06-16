@@ -26,7 +26,7 @@ namespace GameService.API.Data.Repository
             var batch = _redisDb.CreateBatch();
             var tasks = new List<Task>
            {
-               batch.ExecuteAsync("JSON.SET", $"game:{entity.Id}", "$", json)
+               batch.StringSetAsync($"game:{entity.Id}", json)
            };
 
             if (!string.IsNullOrWhiteSpace(entity.WhiteToken))
@@ -44,8 +44,7 @@ namespace GameService.API.Data.Repository
             var keys = server.Keys(pattern: "game:*").ToList();
             var games = new List<GameModel>();
 
-            // Start all fetches in parallel
-            var tasks = keys.Select(key => _redisDb.JsonGetAsync(key)).ToArray();
+            var tasks = keys.Select(key => _redisDb.StringGetAsync(key)).ToArray();
             var results = await Task.WhenAll(tasks);
 
             foreach (var json in results)
@@ -64,7 +63,7 @@ namespace GameService.API.Data.Repository
         public async Task<GameModel?> GetGameByGameId(Guid gameId)
         {
             var redisKey = $"game:{gameId}";
-            var json = await _redisDb.JsonGetAsync(redisKey);
+            var json = await _redisDb.StringGetAsync(redisKey);
 
             if (json.IsNull)
                 return null;
@@ -108,7 +107,7 @@ namespace GameService.API.Data.Repository
             var batch = _redisDb.CreateBatch();
             var tasks = new List<Task>
             {
-                batch.ExecuteAsync("JSON.SET", key, "$", json)
+                batch.StringSetAsync(key, json)
             };
             if (!string.IsNullOrWhiteSpace(entity.WhiteToken))
                 tasks.Add(batch.StringSetAsync($"player:{entity.WhiteToken}", entity.Id.ToString()));
@@ -118,6 +117,5 @@ namespace GameService.API.Data.Repository
             batch.Execute();
             await Task.WhenAll(tasks);
         }
-
     }
 }

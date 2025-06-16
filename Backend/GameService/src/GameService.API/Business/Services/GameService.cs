@@ -70,7 +70,7 @@ namespace GameService.API.Business.Services
             }
         }
 
-        public async Task<string> MakeMove(Guid gameId, string? color, string uci)
+        public async Task<string> MakeMoveAsync(Guid gameId, string color, string uci)
         {
             if (gameId == Guid.Empty)
             {
@@ -137,7 +137,6 @@ namespace GameService.API.Business.Services
                 throw new InvalidOperationException("An error occurred while making the move", ex);
             }
         }
-
         public async Task<List<GameModel>> GetAllGames()
         {
             try
@@ -149,6 +148,11 @@ namespace GameService.API.Business.Services
                 _logger.LogError(ex, "Unexpected error occurred while retrieving all games");
                 throw new InvalidOperationException("An error occurred while making the move", ex);
             }
+        }
+
+        public Task<string> MakeMove(Guid gameId, string? color, string uci)
+        {
+            throw new NotImplementedException();
         }
     }
 }
