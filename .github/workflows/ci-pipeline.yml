@@ -64,6 +64,9 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
 
+      - name: Show current directory
+        run: pwd
+
       - name: Ensure Authservice .env directory exists
         run: mkdir -p Backend/Authservice/src/Authservice.API
 
