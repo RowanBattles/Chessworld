@@ -130,19 +130,14 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           set -e
-          taskid=$(cat .scannerwork/report-task.txt | grep ceTaskId | cut -d'=' -f2)
-          status="PENDING"
-          timeout=60
-          while [[ "$status" == "PENDING" && $timeout -gt 0 ]]; do
-            sleep 5
-            status=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/ce/task?id=$taskid" | jq -r .task.status)
-            timeout=$((timeout - 1))
-          done
-          if [[ "$status" != "SUCCESS" ]]; then
-            echo "SonarCloud analysis did not complete successfully."
+          projectKey="RowanBattles_Chessworld"
+          analysisId=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/project_analyses/search?project=$projectKey" | jq -r '.analyses[0].events[] | select(.category=="QUALITY_GATE") | .analysisId')
+          if [ -z "$analysisId" ]; then
+            echo "Could not find analysisId for project $projectKey"
             exit 1
           fi
-          qualityGateStatus=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/ce/task?id=$taskid" | jq -r .task.analysisId | xargs -I {} curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/qualitygates/project_status?analysisId={}" | jq -r .projectStatus.status)
+          # Check the quality gate status
+          qualityGateStatus=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/qualitygates/project_status?analysisId=$analysisId" | jq -r .projectStatus.status)
           if [[ "$qualityGateStatus" != "OK" ]]; then
             echo "Quality Gate failed: $qualityGateStatus"
             exit 1
