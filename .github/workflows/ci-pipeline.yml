@@ -132,10 +132,10 @@ jobs:
           set -e
           projectKey="RowanBattles_Chessworld"
           analysisId=""
-          retries=10
+          retries=30
           while [[ -z "$analysisId" && $retries -gt 0 ]]; do
             sleep 5
-            echo "Polling SonarCloud for analysisId... ($((60 - retries + 1)))"
+            echo "Polling SonarCloud for analysisId... ($((30 - retries + 1)))"
             response=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/project_analyses/search?project=$projectKey")
             analysisId=$(echo "$response" | jq -r '.analyses[0].key')
             retries=$((retries - 1))
@@ -144,7 +144,17 @@ jobs:
             echo "Could not find analysisId for project $projectKey"
             exit 1
           fi
-          qualityGateStatus=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/qualitygates/project_status?analysisId=$analysisId" | jq -r .projectStatus.status)
+
+          # Wait for Quality Gate status to be OK or ERROR
+          qualityGateStatus="NONE"
+          retries=30
+          while [[ "$qualityGateStatus" == "NONE" && $retries -gt 0 ]]; do
+            sleep 5
+            echo "Polling SonarCloud for Quality Gate status... ($((30 - retries + 1)))"
+            qualityGateStatus=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/qualitygates/project_status?analysisId=$analysisId" | jq -r .projectStatus.status)
+            retries=$((retries - 1))
+          done
+
           if [[ "$qualityGateStatus" != "OK" ]]; then
             echo "Quality Gate failed: $qualityGateStatus"
             exit 1
