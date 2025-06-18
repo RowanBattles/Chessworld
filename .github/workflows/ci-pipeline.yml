@@ -137,11 +137,14 @@ jobs:
           while [[ "$qualityGateStatus" == "NONE" && $retries -gt 0 ]]; do
             sleep 5
             echo "Polling SonarCloud for Quality Gate status... ($((30 - retries + 1)))"
-            qualityGateStatus=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$projectKey&branch=$branch" | jq -r .projectStatus.status)
+            response=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$projectKey&branch=$branch")
+            qualityGateStatus=$(echo "$response" | jq -r .projectStatus.status)
             retries=$((retries - 1))
           done
           if [[ "$qualityGateStatus" != "OK" ]]; then
             echo "Quality Gate failed: $qualityGateStatus"
+            echo "Failed conditions:"
+            echo "$response" | jq -r '.projectStatus.conditions[] | select(.status != "OK") | "- \(.metricKey): \(.status) (\(.actualValue) vs \(.errorThreshold))"'
             exit 1
           fi
           echo "Quality Gate passed!"
