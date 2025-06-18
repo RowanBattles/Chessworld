@@ -98,7 +98,7 @@ jobs:
         with:
           projectBaseDir: .
           args: >
-            -Dsonar.projectKey=Chessworld
+            -Dsonar.projectKey=RowanBattles_Chessworld
             -Dsonar.organization=Rowan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
