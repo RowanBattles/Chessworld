@@ -125,12 +125,23 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: SonarCloud Quality Gate Check
-        uses: SonarSource/sonarcloud-quality-gate-action@v1
-        with:
-          scanMetadataReportFile: .scannerwork/report-task.txt
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Check SonarCloud Quality Gate
+        run: |
+          ceTaskId=$(grep ceTaskId .scannerwork/report-task.txt | cut -d'=' -f2)
+          status=""
+          for i in {1..30}; do
+            status=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" "https://sonarcloud.io/api/ce/task?id=$ceTaskId" | jq -r .task.status)
+            if [[ "$status" == "SUCCESS" ]]; then
+              break
+            fi
+            sleep 10
+          done
+          qualityGateStatus=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" "https://sonarcloud.io/api/qualitygates/project_status?analysisId=$(curl -s -u "${{ secrets.SONAR_TOKEN }}:" "https://sonarcloud.io/api/ce/task?id=$ceTaskId" | jq -r .task.analysisId)" | jq -r .projectStatus.status)
+          if [[ "$qualityGateStatus" != "OK" ]]; then
+            echo "Quality Gate failed: $qualityGateStatus"
+            exit 1
+          fi
+        shell: bash
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
