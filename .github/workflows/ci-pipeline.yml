@@ -64,24 +64,6 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
 
-      - name: Show current directory
-        run: pwd
-
-      - name: Ensure Authservice .env directory exists
-        run: mkdir -p Backend/Authservice/src/Authservice.API
-
-      - name: Create .env for Authservice
-        run: |
-          cat <<EOF > Backend/Authservice/src/Authservice.API/.env
-          EMAIL_SMTP_SERVER=${{ secrets.EMAIL_SMTP_SERVER }}
-          EMAIL_SMTP_PORT=${{ secrets.EMAIL_SMTP_PORT }}
-          EMAIL_SMTP_USER=${{ secrets.EMAIL_SMTP_USER }}
-          EMAIL_SMTP_PASS=${{ secrets.EMAIL_SMTP_PASS }}
-          EMAIL_FROM=${{ secrets.EMAIL_FROM }}
-          EMAIL_VERIFICATION_BASE_URL=${{ secrets.EMAIL_VERIFICATION_BASE_URL }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          EOF
-
       - name: Build Backend Services
         run: docker-compose -f docker-compose.yml build
 
