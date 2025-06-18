@@ -9,62 +9,79 @@ jobs:
   frontend:
     name: Frontend CI
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Frontend
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v3
         with:
-          node-version: "20"
+          node-version: 20
+
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
 
       - name: Install Dependencies
-        working-directory: ./Frontend
-        run: npm ci
+        run: yarn install
 
-      - name: Run Frontend Tests
-        working-directory: ./Frontend
-        run: npm test -- --ci --coverage
-
-      - name: Build Frontend
-        working-directory: ./Frontend
-        run: npm run build
-
-      - name: Upload Frontend Coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-coverage
-          path: ./Frontend/coverage
+      - name: Run Linter
+        run: yarn lint
 
   backend:
     name: Backend CI
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Backend
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.0.x"
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Install Dependencies
-        working-directory: ./Backend
-        run: dotnet restore
+      - name: Install Docker Compose
+        run: |
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
 
-      - name: Build Backend
-        working-directory: ./Backend
-        run: dotnet build --no-restore --configuration Release
+      - name: Ensure Authservice .env directory exists
+        working-directory: ${{ github.workspace }}
+        run: mkdir -p Backend/Authservice/src/Authservice.API
 
-      - name: Run Backend Tests with Coverage
-        working-directory: ./Backend
-        run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage"
+      - name: Create .env for Authservice
+        working-directory: ${{ github.workspace }}
+        run: |
+          cat <<EOF > Backend/Authservice/src/Authservice.API/.env
+          EMAIL_SMTP_SERVER=${{ secrets.EMAIL_SMTP_SERVER }}
+          EMAIL_SMTP_PORT=${{ secrets.EMAIL_SMTP_PORT }}
+          EMAIL_SMTP_USER=${{ secrets.EMAIL_SMTP_USER }}
+          EMAIL_SMTP_PASS=${{ secrets.EMAIL_SMTP_PASS }}
+          EMAIL_FROM=${{ secrets.EMAIL_FROM }}
+          EMAIL_VERIFICATION_BASE_URL=${{ secrets.EMAIL_VERIFICATION_BASE_URL }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          EOF
 
-      - name: Upload Backend Coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-coverage
-          path: ./Backend/**/TestResults
+      - name: Build Backend Services
+        run: docker-compose -f docker-compose.yml build
+
+      - name: Start Backend Services
+        run: docker-compose -f docker-compose.yml up -d
+
+      - name: Run Backend Tests
+        run: docker-compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from gameservice-tests
+
+      - name: Tear Down Backend Services
+        run: docker-compose -f docker-compose.yml down
 
   sonarcloud:
     name: SonarCloud Analysis
@@ -74,17 +91,27 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Download Frontend Coverage
-        uses: actions/download-artifact@v4
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
         with:
-          name: frontend-coverage
-          path: ./Frontend/coverage
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
 
-      - name: Download Backend Coverage
-        uses: actions/download-artifact@v4
+      - name: Cache SonarCloud scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v4
         with:
-          name: backend-coverage
-          path: ./Backend/TestResults
+          path: ./.sonar/scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+
+      - name: Install SonarCloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          New-Item -Path ./.sonar/scanner -ItemType Directory -Force
+          dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
@@ -92,8 +119,6 @@ jobs:
           args: >
             -Dsonar.projectKey=RowanBattles_Chessworld
             -Dsonar.organization=rowanbattles
-            -Dsonar.javascript.lcov.reportPaths=Frontend/coverage/lcov.info
-            -Dsonar.cs.vscoveragexml.reportsPaths=Backend/**/TestResults/**/*.xml
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -104,20 +129,17 @@ jobs:
         run: |
           set -e
           projectKey="RowanBattles_Chessworld"
-          branch="${GITHUB_REF##*/}"
+          branch="development"
           retries=30
           qualityGateStatus="NONE"
           while [[ "$qualityGateStatus" == "NONE" && $retries -gt 0 ]]; do
             sleep 5
             echo "Polling SonarCloud for Quality Gate status... ($((30 - retries + 1)))"
-            response=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$projectKey&branch=$branch")
-            qualityGateStatus=$(echo "$response" | jq -r .projectStatus.status)
+            qualityGateStatus=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/qualitygates/project_status?projectKey=$projectKey&branch=$branch" | jq -r .projectStatus.status)
             retries=$((retries - 1))
           done
           if [[ "$qualityGateStatus" != "OK" ]]; then
             echo "Quality Gate failed: $qualityGateStatus"
-            echo "Failed conditions:"
-            echo "$response" | jq -r '.projectStatus.conditions[] | select(.status != "OK") | "- \(.metricKey): \(.status) (\(.actualValue) vs \(.errorThreshold))"'
             exit 1
           fi
           echo "Quality Gate passed!"
@@ -130,18 +152,27 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Build and Push Frontend Image
         run: |
           docker build -t yourdockerhub/frontend:latest ./Frontend
           docker push yourdockerhub/frontend:latest
 
-      - name: Build and Push Backend Image
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+
+      - name: Build and Push Frontend Docker Image
         run: |
-          docker build -t yourdockerhub/backend:latest ./Backend
-          docker push yourdockerhub/backend:latest
+          docker build --build-arg VITE_API_URL=https://chessworldexampledns.duckdns.org/api -t ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest .
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
+
+      - name: Tag and Push Backend Images
+        run: |
+          docker tag gameservice ${{ secrets.DOCKERHUB_USERNAME }}/gameservice:latest
+          docker tag matchmakingservice ${{ secrets.DOCKERHUB_USERNAME }}/matchmakingservice:latest
+          docker tag apigateway ${{ secrets.DOCKERHUB_USERNAME }}/apigateway:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/gameservice:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/matchmakingservice:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/apigateway:latest
