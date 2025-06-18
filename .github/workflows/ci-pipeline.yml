@@ -119,8 +119,8 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@v2
         with:
           args: >
-            -Dsonar.projectKey=Rowan
-            -Dsonar.organization=your_organization
+            -Dsonar.projectKey=RowanBattles_Chessworld
+            -Dsonar.organization=Rowan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
