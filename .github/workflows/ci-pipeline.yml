@@ -93,16 +93,36 @@ jobs:
       - name: Tear Down Backend Services
         run: docker-compose -f docker-compose.yml down
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
         with:
-          projectBaseDir: .
-          args: >
-            -Dsonar.projectKey=RowanBattles_Chessworld
-            -Dsonar.organization=Rowan
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Cache SonarCloud scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v4
+        with:
+          path: ./.sonar/scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+
+      - name: Install SonarCloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          New-Item -Path ./.sonar/scanner -ItemType Directory -Force
+          dotnet tool update dotnet-sonarscanner --tool-path ./.sonar/scanner
+
+      - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          ./.sonar/scanner/dotnet-sonarscanner begin /k:"RowanBattles_Chessworld" /o:"rowanbattles" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+          dotnet build
+          ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
