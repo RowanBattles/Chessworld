@@ -125,17 +125,19 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Wait for SonarCloud Quality Gate
+      - name: Wait for SonarCloud Quality Gate (robust)
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           set -e
           projectKey="RowanBattles_Chessworld"
           analysisId=""
-          retries=24
+          retries=10
           while [[ -z "$analysisId" && $retries -gt 0 ]]; do
             sleep 5
-            analysisId=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/project_analyses/search?project=$projectKey" | jq -r '.analyses[0].events[]? | select(.category=="QUALITY_GATE") | .analysisId')
+            echo "Polling SonarCloud for analysisId... ($((60 - retries + 1)))"
+            response=$(curl -s -u $SONAR_TOKEN: "https://sonarcloud.io/api/project_analyses/search?project=$projectKey")
+            analysisId=$(echo "$response" | jq -r '.analyses[0].key')
             retries=$((retries - 1))
           done
           if [ -z "$analysisId" ]; then
