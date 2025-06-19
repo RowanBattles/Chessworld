@@ -87,6 +87,11 @@ jobs:
           sudo mv k6-v0.49.0-linux-amd64/k6 /usr/local/bin/
           k6 version
 
+      - name: Install node-fetch for validation
+        run: |
+          cd ../load_tests/validation
+          npm install node-fetch
+
       - name: Run Load Tests
         run: |
           cd ../load_tests
