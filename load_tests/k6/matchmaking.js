@@ -11,7 +11,15 @@ export default function () {
 
   let res = http.post("http://localhost:8082/matchmaking/findgame");
 
-  let cookie = res.cookies["playerToken"]?.[0]?.value;
+  let cookie = null;
+  if (
+    res.cookies &&
+    res.cookies["playerToken"] &&
+    res.cookies["playerToken"][0] &&
+    res.cookies["playerToken"][0].value
+  ) {
+    cookie = res.cookies["playerToken"][0].value;
+  }
 
   if (!cookie) {
     console.error("Error: No playerToken cookie found in response.");
