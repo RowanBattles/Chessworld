@@ -75,21 +75,17 @@ jobs:
         run: docker-compose -f docker-compose.yml build
 
       - name: Start Backend Services
-        run: docker-compose -f docker-compose.yml up -d
+        run: docker-compose -f docker-compose.yml up -d --build
 
-      - name: Wait for gameservice HTTP endpoint
+      - name: Wait for matchmakingservice HTTP endpoint
         run: |
           for i in {1..30}; do
-            curl -sf http://localhost:8080/games && echo "gameservice endpoint is up!" && exit 0
-            echo "Waiting for gameservice endpoint..."
+            nc -z localhost 8082 && echo "matchmakingservice is up!" && exit 0
+            echo "Waiting for matchmakingservice..."
             sleep 2
           done
-          echo "gameservice endpoint did not start in time" >&2
+          echo "matchmakingservice did not start in time" >&2
           exit 1
-
-      - name: Print gameservice logs on failure
-        if: failure()
-        run: docker-compose -f docker-compose.yml logs gameservice
 
       - name: Run Backend Tests
         run: docker-compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from gameservice-tests
