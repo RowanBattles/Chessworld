@@ -111,10 +111,21 @@ jobs:
           sudo mv k6-v0.49.0-linux-amd64/k6 /usr/local/bin/
           k6 version
 
-      - name: Install node-fetch for validation
+      - name: Clean and install node-fetch
         run: |
           cd ../load_tests/validation
+          rm -rf node_modules package-lock.json
           npm install node-fetch
+
+      - name: Test node-fetch connectivity
+        run: |
+          cd ../load_tests/validation
+          echo "import fetch from 'node-fetch';
+          fetch('http://127.0.0.1:8080/games')
+            .then(res => res.text())
+            .then(text => { console.log('Fetch succeeded:', text); process.exit(0); })
+            .catch(err => { console.error('Fetch failed:', err); process.exit(1); });" > test-fetch.mjs
+          node test-fetch.mjs
 
       - name: Run Load Tests
         run: |
