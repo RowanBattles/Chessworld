@@ -9,7 +9,7 @@ export const options = {
 export default function () {
   sleep(1);
 
-  let res = http.post("http://localhost:8082/matchmaking/findgame");
+  let res = http.post("http://http://127.0.0.1:8082/matchmaking/findgame");
 
   let cookie = null;
   if (
