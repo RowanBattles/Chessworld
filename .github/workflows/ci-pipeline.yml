@@ -82,7 +82,7 @@ jobs:
 
       - name: Run Load Tests
         run: |
-          cd load_tests
+          cd ../load_tests
           chmod +x test.sh
           ./test.sh | tee test_output.log
           grep -q "Test passed!" test_output.log
