@@ -80,6 +80,13 @@ jobs:
       - name: Run Backend Tests
         run: docker-compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from gameservice-tests
 
+      - name: Run Load Tests
+        run: |
+          cd load_tests
+          chmod +x test.sh
+          ./test.sh | tee test_output.log
+          grep -q "Test passed!" test_output.log
+
       - name: Tear Down Backend Services
         run: docker-compose -f docker-compose.yml down
 
