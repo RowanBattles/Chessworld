@@ -80,6 +80,15 @@ jobs:
       - name: Run Backend Tests
         run: docker-compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from gameservice-tests
 
+      - name: Install k6
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gnupg ca-certificates
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 33E6B581F9DDC6B6
+          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
+
       - name: Run Load Tests
         run: |
           cd ../load_tests
