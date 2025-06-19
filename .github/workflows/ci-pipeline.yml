@@ -97,6 +97,10 @@ jobs:
           echo "matchmakingservice did not start in time" >&2
           exit 1
 
+      - name: Check gameservice endpoint response
+        run: |
+          curl -v http://localhost:8080/games || true
+
       - name: Run Backend Tests
         run: docker-compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from gameservice-tests
 
