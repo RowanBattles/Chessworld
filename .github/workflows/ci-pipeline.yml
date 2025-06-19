@@ -77,6 +77,16 @@ jobs:
       - name: Start Backend Services
         run: docker-compose -f docker-compose.yml up -d
 
+      - name: Wait for gameservice to be ready
+        run: |
+          for i in {1..30}; do
+            nc -z localhost 8080 && echo "gameservice is up!" && exit 0
+            echo "Waiting for gameservice..."
+            sleep 2
+          done
+          echo "gameservice did not start in time" >&2
+          exit 1
+
       - name: Run Backend Tests
         run: docker-compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from gameservice-tests
 
