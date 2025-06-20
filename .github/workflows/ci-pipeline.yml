@@ -140,10 +140,6 @@ jobs:
             retries=$((retries - 1))
           done
 
-          echo "Quality Gate status: $qualityGateStatus"
-          echo "Criteria:"
-          echo "$response" | jq -r '.projectStatus.conditions[] | "  - \(.metricKey): \(.status) (\(.comparator) \(.errorThreshold)), actual: \(.actualValue // "N/A")"'
-
           if [[ "$qualityGateStatus" != "OK" ]]; then
             echo "Quality Gate failed: $qualityGateStatus"
             echo "Failure reasons:"
